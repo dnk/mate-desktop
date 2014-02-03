@@ -32,6 +32,8 @@
 
 #include "mate-rr-config.h"
 
+#include <gtk/gtk.h>
+
 #define MATE_TYPE_RR_LABELER            (mate_rr_labeler_get_type ())
 #define MATE_RR_LABELER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MATE_TYPE_RR_LABELER, MateRRLabeler))
 #define MATE_RR_LABELER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  MATE_TYPE_RR_LABELER, MateRRLabelerClass))
@@ -48,6 +50,9 @@ MateRRLabeler *mate_rr_labeler_new (MateRRConfig *config);
 
 void mate_rr_labeler_hide (MateRRLabeler *labeler);
 
+void mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkRGBA *color_out);
+
+G_DEPRECATED_FOR(mate_rr_labeler_get_rgba_for_output)
 void mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *color_out);
 
 #endif
