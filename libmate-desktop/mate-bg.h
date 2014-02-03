@@ -101,6 +101,11 @@ void             mate_bg_set_filename          (MateBG               *bg,
 						 const char            *filename);
 void             mate_bg_set_placement         (MateBG               *bg,
 						 MateBGPlacement       placement);
+void             mate_bg_set_rgba             (MateBG               *bg,
+						 MateBGColorType     type,
+						 GdkRGBA             *primary,
+						 GdkRGBA             *secondary);
+G_DEPRECATED_FOR(mate_bg_set_rgba)
 void             mate_bg_set_color             (MateBG               *bg,
 						 MateBGColorType       type,
 						 GdkColor              *primary,
@@ -110,6 +115,11 @@ void		 mate_bg_set_draw_background   (MateBG		     *bg,
 /* Getters */
 gboolean	 mate_bg_get_draw_background   (MateBG		     *bg);
 MateBGPlacement  mate_bg_get_placement         (MateBG               *bg);
+void		 mate_bg_get_rgba             (MateBG               *bg,
+						 MateBGColorType      *type,
+						 GdkRGBA              *primary,
+						 GdkRGBA              *secondary);
+G_DEPRECATED_FOR(mate_bg_get_rgba)
 void		 mate_bg_get_color             (MateBG               *bg,
 						 MateBGColorType      *type,
 						 GdkColor              *primary,
@@ -117,6 +127,11 @@ void		 mate_bg_get_color             (MateBG               *bg,
 const gchar *    mate_bg_get_filename          (MateBG               *bg);
 
 /* Drawing and thumbnailing */
+void		mate_bg_fill			(MateBG     *bg,
+					          cairo_t   *cr,
+						      gint      width,
+					              gint      height);
+G_DEPRECATED_FOR(mate_bg_fill)
 void             mate_bg_draw                  (MateBG               *bg,
 						 GdkPixbuf             *dest,
 						 GdkScreen	       *screen,
