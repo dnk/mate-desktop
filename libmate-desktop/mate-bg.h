@@ -127,14 +127,15 @@ void		 mate_bg_get_color             (MateBG               *bg,
 const gchar *    mate_bg_get_filename          (MateBG               *bg);
 
 /* Drawing and thumbnailing */
-void		mate_bg_fill			(MateBG     *bg,
-					          cairo_t   *cr,
-						      gint      width,
-					              gint      height);
-G_DEPRECATED_FOR(mate_bg_fill)
 void             mate_bg_draw                  (MateBG               *bg,
+#if GTK_CHECK_VERSION(3, 0, 0)
+						cairo_t		     *cr,
+						gint			width,
+						gint			height,
+#else
 						 GdkPixbuf             *dest,
 						 GdkScreen	       *screen,
+#endif
                                                  gboolean               is_root);
 
 #if GTK_CHECK_VERSION(3, 0, 0)

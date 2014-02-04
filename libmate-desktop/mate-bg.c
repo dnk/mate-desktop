@@ -971,10 +971,19 @@ draw_color_area (MateBG       *bg,
 
 static void
 draw_color (MateBG    *bg,
-	    GdkPixbuf *dest)
+#if GTK_CHECK_VERSION(3, 0, 0)
+	cairo_t       *cr,
+	gint          width,
+	gint          height
+#else
+	    GdkPixbuf *dest
+#endif
+	)
 {
 #if GTK_CHECK_VERSION(3, 0, 0)
-	// todo
+	gdk_cairo_set_source_rgba(cr, &(bg->primary));
+	cairo_rectangle(cr, 0, 0, width, height);
+	cairo_fill(cr);
 #else
 	GdkRectangle rect;
 
@@ -986,6 +995,8 @@ draw_color (MateBG    *bg,
 #endif
 }
 
+
+#if !GTK_CHECK_VERSION(3, 0, 0)
 static void
 draw_color_each_monitor (MateBG    *bg,
 			 GdkPixbuf *dest,
@@ -998,13 +1009,10 @@ draw_color_each_monitor (MateBG    *bg,
 	num_monitors = gdk_screen_get_n_monitors (screen);
 	for (monitor = 0; monitor < num_monitors; monitor++) {
 		gdk_screen_get_monitor_geometry (screen, monitor, &rect);
-#if GTK_CHECK_VERSION(3, 0, 0)
-		//todo
-#else
 		draw_color_area (bg, dest, &rect);
-#endif
 	}
 }
+#endif
 
 static GdkPixbuf *
 pixbuf_clip_to_fit (GdkPixbuf *src,
@@ -1142,6 +1150,8 @@ draw_image_for_thumb (MateBG     *bg,
 	draw_image_area (bg, -1, pixbuf, dest, &rect);
 }
 
+#if 0
+/*todo*/
 static void
 draw_once (MateBG    *bg,
 	   GdkPixbuf *dest,
@@ -1190,36 +1200,40 @@ draw_each_monitor (MateBG    *bg,
 		}
 	}
 }
-
-void
-mate_bg_fill(MateBG     *bg,
-	      cairo_t   *cr,
-	      gint      width,
-              gint      height)
-{
-	gdk_cairo_set_source_rgba(cr, &(bg->primary));
-	cairo_rectangle(cr, 0,0, width, height);
-	cairo_fill(cr);
-}
+#endif
 
 void
 mate_bg_draw (MateBG     *bg,
+#if GTK_CHECK_VERSION(3, 0, 0)
+		cairo_t  *cr,
+		gint     width,
+		gint     height,
+#else
 	       GdkPixbuf *dest,
 	       GdkScreen *screen,
+#endif
 	       gboolean   is_root)
 {
 	if (!bg)
 		return;
 
 	if (is_root && (bg->placement != MATE_BG_PLACEMENT_SPANNED)) {
+#if GTK_CHECK_VERSION(3, 0, 0)
+		draw_color (bg, cr, width, height);
+#else
 		draw_color_each_monitor (bg, dest, screen);
+#endif
 		if (bg->filename) {
-			draw_each_monitor (bg, dest, screen);
+			/*todo draw_each_monitor (bg, dest, screen);*/
 		}
 	} else {
+#if GTK_CHECK_VERSION(3, 0, 0)
+		draw_color (bg, cr, width, height);
+#else
 		draw_color (bg, dest);
+#endif
 		if (bg->filename) {
-			draw_once (bg, dest, screen, is_root);
+			/*todo draw_once (bg, dest, screen, is_root); */
 		}
 	}
 }
@@ -1558,7 +1572,7 @@ mate_bg_create_thumbnail (MateBG               *bg,
 
 	result = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, dest_width, dest_height);
 
-	draw_color (bg, result);
+/*todo	draw_color (bg, result); */
 
 	if (bg->filename) {
 		thumb = create_img_thumbnail (bg, factory, screen, dest_width, dest_height, -1);
