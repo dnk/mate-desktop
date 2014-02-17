@@ -1,13 +1,13 @@
 m4_define([mate_platform], [1])
 m4_define([mate_minor], [7])
-m4_define([mate_micro], [3])
+m4_define([mate_micro], [90])
 
 m4_define(mate_version, [mate_platform.mate_minor.mate_micro]),
 
 AC_INIT([mate-desktop], mate_version, [https://github.com/mate-desktop/mate-desktop/])
 AC_CONFIG_SRCDIR([libmate-desktop])
 
-AM_INIT_AUTOMAKE([1.9 foreign no-dist-gzip dist-xz tar-ustar])
+AM_INIT_AUTOMAKE([1.9 foreign no-dist-gzip dist-xz tar-ustar check-news])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_HEADERS([config.h])
@@ -341,6 +341,7 @@ man/Makefile
 tools/mate-conf-import.desktop.in
 tools/Makefile
 user-guide/Makefile
+user-guide/mate-user-guide.desktop.in
 ])
 
 AC_OUTPUT
