@@ -932,9 +932,6 @@ draw_color_area (MateBG       *bg,
 
 	switch (bg->color_type) {
 	case MATE_BG_COLOR_SOLID: {
-#if GTK_CHECK_VERSION(3, 0, 0)
-		// todo
-#else
 		guint32 pixel;
 		/* not really a big deal to ignore the area of interest */
 		pixel = ((bg->primary.red >> 8) << 24)      |
@@ -943,24 +940,15 @@ draw_color_area (MateBG       *bg,
 			(0xff);
 
 		gdk_pixbuf_fill (dest, pixel);
-#endif
 		}
 		break;
 
 	case MATE_BG_COLOR_H_GRADIENT:
-#if GTK_CHECK_VERSION(3, 0, 0)
-		//todo
-#else
 		pixbuf_draw_gradient (dest, TRUE, &(bg->primary), &(bg->secondary), rect);
-#endif
 		break;
 
 	case MATE_BG_COLOR_V_GRADIENT:
-#if GTK_CHECK_VERSION(3, 0, 0)
-		//todo
-#else
 		pixbuf_draw_gradient (dest, FALSE, &(bg->primary), &(bg->secondary), rect);
-#endif
 		break;
 
 	default:
