@@ -218,11 +218,12 @@ color_from_string(const char *string,
 		  GdkRGBA    *colorp)
 {
 	/* If all else fails use black */
-	gdk_rgba_parse (colorp, "black");
-	if (!string)
-		return;
-
-	gdk_rgba_parse (colorp, string);
+	if (!gdk_rgba_parse (colorp, string)) {
+		colorp->red = 0.0;
+		colorp->blue = 0.0;
+		colorp->green = 0.0;
+		colorp->alpha = 1.0;
+	}
 }
 #else
 static void
@@ -452,7 +453,11 @@ mate_bg_load_from_gsettings (MateBG    *bg,
 	/* Placement */
 	placement = g_settings_get_enum (settings, MATE_BG_KEY_PICTURE_PLACEMENT);
 
+#if GTK_CHECK_VERSION (3, 0, 0)
 	mate_bg_set_rgba (bg, ctype, &c1, &c2);
+#else
+	mate_bg_set_color (bg, ctype, &c1, &c2);
+#endif
 	mate_bg_set_placement (bg, placement);
 	mate_bg_set_filename (bg, filename);
 
@@ -577,6 +582,7 @@ mate_bg_new (void)
 	return g_object_new (MATE_TYPE_BG, NULL);
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
 void
 mate_bg_set_rgba (MateBG *bg,
 		    MateBGColorType type,
@@ -591,7 +597,6 @@ mate_bg_set_rgba (MateBG *bg,
 	    !gdk_rgba_equal (&bg->primary, primary)			||
 	    (secondary && !gdk_rgba_equal (&bg->secondary, secondary)))
 	{
-
 		bg->color_type = type;
 		bg->primary = *primary;
 		if (secondary) {
@@ -605,10 +610,14 @@ mate_bg_set_rgba (MateBG *bg,
 static void
 color_to_rgba(const GdkColor* color, GdkRGBA* rgba)
 {
-	gchar *color_string = gdk_color_to_string(color);
-	gdk_rgba_parse(rgba, color_string);
-	g_free(color_string);
+	g_assert (color != NULL);
+	g_assert (rgba != NULL);
+	rgba->red = color->red/65535.0;
+	rgba->blue = color->blue/65535.0;
+	rgba->green = color->green/65535.0;
+	rgba->alpha = 1.0;
 }
+#endif
 
 void
 mate_bg_set_color (MateBG *bg,
@@ -619,24 +628,39 @@ mate_bg_set_color (MateBG *bg,
 	g_return_if_fail (bg != NULL);
 	g_return_if_fail (primary != NULL);
 
+#if GTK_CHECK_VERSION (3, 0, 0)
 	GdkRGBA primary_rgba;
 	GdkRGBA secondary_rgba;
 
 	color_to_rgba(primary, &primary_rgba);
+
 	if(secondary) {
 		color_to_rgba(secondary, &secondary_rgba);
 	}
+#endif
 
 	if (bg->color_type != type			||
-	    !gdk_rgba_equal (&bg->primary, &primary_rgba)			||
+#if GTK_CHECK_VERSION (3, 0, 0)
+	    !gdk_rgba_equal (&bg->primary, &primary_rgba)		||
 	    (secondary && !gdk_rgba_equal (&bg->secondary, &secondary_rgba)))
+#else
+	    !gdk_color_equal (&bg->primary, primary)			||
+	    (secondary && !gdk_color_equal (&bg->secondary, secondary)))
+#endif
 	{
 
 		bg->color_type = type;
+#if GTK_CHECK_VERSION (3, 0, 0)
 		bg->primary = primary_rgba;
 		if (secondary) {
 			bg->secondary = secondary_rgba;
 		}
+#else
+		bg->primary = *primary;
+		if (secondary) {
+			bg->secondary = *secondary;
+		}
+#endif
 
 		queue_changed (bg);
 	}
@@ -663,6 +687,7 @@ mate_bg_get_placement (MateBG *bg)
 	return bg->placement;
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
 void
 mate_bg_get_rgba (MateBG		*bg,
 		   MateBGColorType	*type,
@@ -680,6 +705,7 @@ mate_bg_get_rgba (MateBG		*bg,
 	if (secondary)
 		*secondary = bg->secondary;
 }
+#endif
 
 void
 mate_bg_get_color (MateBG		*bg,
@@ -1346,7 +1372,6 @@ mate_bg_create_pixmap  (MateBG      *bg,
 	}
 	else
 	{
-
 #if GTK_CHECK_VERSION(3, 0, 0)
 		gdk_cairo_set_source_window(cr, window, 0, 0);
 #else
@@ -1537,7 +1562,6 @@ mate_bg_get_image_size (MateBG	       *bg,
 
 	return result;
 }
-
 
 static double
 fit_factor (int from_width, int from_height,

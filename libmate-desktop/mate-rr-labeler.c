@@ -476,6 +476,7 @@ mate_rr_labeler_hide (MateRRLabeler *labeler)
 
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
 void
 mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkRGBA *color_out)
 {
@@ -498,6 +499,7 @@ mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateOutputInfo *out
 	color_out->blue  = 1.0;
 	color_out->alpha = 1.0;
 }
+#endif
 
 void
 mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *color_out)
@@ -510,9 +512,15 @@ mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateOutputInfo *ou
 
 	for (i = 0; i < labeler->num_outputs; i++)
 		if (labeler->config->outputs[i] == output) {
+#if GTK_CHECK_VERSION (3, 0, 0)
 			color_out->red = labeler->palette[i].red * 0xffff;
 			color_out->green = labeler->palette[i].green * 0xffff;
 			color_out->blue = labeler->palette[i].blue * 0xffff;
+#else
+			color_out->red = labeler->palette[i].red;
+			color_out->green = labeler->palette[i].green;
+			color_out->blue = labeler->palette[i].blue;
+#endif
 			return;
 		}
 
