@@ -164,9 +164,22 @@ static void       pixbuf_draw_gradient (GdkPixbuf    *pixbuf,
 #endif
 
 static void       pixbuf_tile          (GdkPixbuf  *src,
-					GdkPixbuf  *dest);
+#if GTK_CHECK_VERSION (3, 0, 0)
+					cairo_t    *cr,
+					int        width,
+					int        height
+#else
+					GdkPixbuf  *dest
+#endif
+					);
 static void       pixbuf_blend         (GdkPixbuf  *src,
+#if GTK_CHECK_VERSION (3, 0, 0)
+					cairo_t    *cr,
+					int         dest_width,
+					int         dest_height,
+#else
 					GdkPixbuf  *dest,
+#endif
 					int         src_x,
 					int         src_y,
 					int         width,
@@ -1113,7 +1126,11 @@ static void
 draw_image_area (MateBG        *bg,
 		 gint           num_monitor,
 		 GdkPixbuf     *pixbuf,
+#if GTK_CHECK_VERSION (3, 0, 0)
+		 cairo_t       *cr,
+#else
 		 GdkPixbuf     *dest,
+#endif
 		 GdkRectangle  *area)
 {
 	int dest_width = area->width;
@@ -1128,16 +1145,28 @@ draw_image_area (MateBG        *bg,
 
 	switch (bg->placement) {
 	case MATE_BG_PLACEMENT_TILED:
+#if GTK_CHECK_VERSION (3, 0, 0)
+		pixbuf_tile (scaled, cr, dest_width, dest_height);
+#else
 		pixbuf_tile (scaled, dest);
+#endif
 		break;
 	case MATE_BG_PLACEMENT_ZOOMED:
 	case MATE_BG_PLACEMENT_CENTERED:
 	case MATE_BG_PLACEMENT_FILL_SCREEN:
 	case MATE_BG_PLACEMENT_SCALED:
+#if GTK_CHECK_VERSION (3, 0, 0)
+		pixbuf_blend (scaled, cr, dest_width, dest_height, 0, 0, w, h, x + area->x, y + area->y, 1.0);
+#else
 		pixbuf_blend (scaled, dest, 0, 0, w, h, x + area->x, y + area->y, 1.0);
+#endif
 		break;
 	case MATE_BG_PLACEMENT_SPANNED:
+#if GTK_CHECK_VERSION (3, 0, 0)
+		pixbuf_blend (scaled, cr, dest_width, dest_height, 0, 0, w, h, x, y, 1.0);
+#else
 		pixbuf_blend (scaled, dest, 0, 0, w, h, x, y, 1.0);
+#endif
 		break;
 	default:
 		g_assert_not_reached ();
@@ -1152,24 +1181,44 @@ draw_image_area (MateBG        *bg,
 static void
 draw_image_for_thumb (MateBG     *bg,
 		      GdkPixbuf  *pixbuf,
-		      GdkPixbuf  *dest)
+#if GTK_CHECK_VERSION (3, 0, 0)
+		      cairo_t    *cr,
+		      gint       width,
+		      gint       height
+#else
+		      GdkPixbuf  *dest
+#endif
+			)
 {
 	GdkRectangle rect;
 
 	rect.x = 0;
 	rect.y = 0;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	rect.width = width;
+	rect.height = height;
+
+#else
 	rect.width = gdk_pixbuf_get_width (dest);
 	rect.height = gdk_pixbuf_get_height (dest);
+#endif
 
+#if GTK_CHECK_VERSION(3, 0, 0)
+	draw_image_area (bg, -1, pixbuf, cr, &rect);
+#else
 	draw_image_area (bg, -1, pixbuf, dest, &rect);
+#endif
 }
 
-#if 0
-/*todo*/
 static void
 draw_once (MateBG    *bg,
+#if GTK_CHECK_VERSION (3, 0, 0)
+           cairo_t   *cr,
+           gint      width,
+           gint      height,
+#else
 	   GdkPixbuf *dest,
-	   GdkScreen *screen,
+#endif
 	   gboolean   is_root)
 {
 	GdkRectangle rect;
@@ -1181,17 +1230,27 @@ draw_once (MateBG    *bg,
 
 	rect.x = 0;
 	rect.y = 0;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	rect.width = width;
+	rect.height = height;
+#else
 	rect.width = gdk_pixbuf_get_width (dest);
 	rect.height = gdk_pixbuf_get_height (dest);
+#endif
 
 	pixbuf = get_pixbuf_for_size (bg, monitor, rect.width, rect.height);
 	if (pixbuf) {
+#if GTK_CHECK_VERSION (3, 0, 0)
+		draw_image_area (bg, monitor, pixbuf, cr, &rect);
+#else
 		draw_image_area (bg, monitor, pixbuf, dest, &rect);
+#endif
 
 		g_object_unref (pixbuf);
 	}
 }
 
+#if !GTK_CHECK_VERSION (3, 0, 0)
 static void
 draw_each_monitor (MateBG    *bg,
 		   GdkPixbuf *dest,
@@ -1238,7 +1297,11 @@ mate_bg_draw (MateBG     *bg,
 		draw_color_each_monitor (bg, dest, screen);
 #endif
 		if (bg->filename) {
-			/*todo draw_each_monitor (bg, dest, screen);*/
+#if GTK_CHECK_VERSION (3, 0, 0)
+			draw_once (bg, cr, width, height, is_root);
+#else
+			draw_each_monitor (bg, dest, screen);
+#endif
 		}
 	} else {
 #if GTK_CHECK_VERSION(3, 0, 0)
@@ -1247,7 +1310,11 @@ mate_bg_draw (MateBG     *bg,
 		draw_color (bg, dest);
 #endif
 		if (bg->filename) {
-			/*todo draw_once (bg, dest, screen, is_root); */
+#if GTK_CHECK_VERSION (3, 0, 0)
+			draw_once (bg, cr, width, height, is_root);
+#else
+			draw_once (bg, dest, is_root);
+#endif
 		}
 	}
 }
@@ -1570,30 +1637,53 @@ fit_factor (int from_width, int from_height,
 	return MIN (to_width  / (double) from_width, to_height / (double) from_height);
 }
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+cairo_surface_t *
+#else
 GdkPixbuf *
+#endif
 mate_bg_create_thumbnail (MateBG               *bg,
 		           MateDesktopThumbnailFactory *factory,
 			   GdkScreen             *screen,
 			   int                    dest_width,
 			   int                    dest_height)
 {
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_surface_t *result;
+#else
 	GdkPixbuf *result;
+#endif
 	GdkPixbuf *thumb;
 
 	g_return_val_if_fail (bg != NULL, NULL);
 
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+	result = cairo_image_surface_create(CAIRO_FORMAT_RGB24, dest_width, dest_height);
+	cairo_t *cr = cairo_create(result);
+	draw_color (bg, cr, dest_width, dest_height);
+#else
 	result = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, dest_width, dest_height);
 
-/*todo	draw_color (bg, result); */
+	draw_color (bg, result);
+#endif
 
 	if (bg->filename) {
 		thumb = create_img_thumbnail (bg, factory, screen, dest_width, dest_height, -1);
 
 		if (thumb) {
+#if GTK_CHECK_VERSION (3, 0, 0)
+			draw_image_for_thumb (bg, thumb, cr, dest_width, dest_height);
+#else
 			draw_image_for_thumb (bg, thumb, result);
+#endif
 			g_object_unref (thumb);
 		}
 	}
+
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_destroy(cr);
+#endif
 
 	return result;
 }
@@ -1966,7 +2056,11 @@ blend (GdkPixbuf *p1,
        GdkPixbuf *p2,
        double alpha)
 {
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_surface_t *surface = gdk_cairo_surface_create_from_pixbuf(p1, 0, NULL);
+#else
 	GdkPixbuf *result = gdk_pixbuf_copy (p1);
+#endif
 	GdkPixbuf *tmp;
 
 	if (gdk_pixbuf_get_width (p2) != gdk_pixbuf_get_width (p1) ||
@@ -1980,7 +2074,18 @@ blend (GdkPixbuf *p1,
 		tmp = g_object_ref (p2);
 	}
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_t *cr = cairo_create(surface);
+	int width = gdk_pixbuf_get_width(p1);
+	int height = gdk_pixbuf_get_height(p1);
+	pixbuf_blend (tmp, cr, width, height, 0, 0, -1, -1, 0, 0, alpha);
+	cairo_destroy (cr);
+
+	GdkPixbuf *result = gdk_pixbuf_get_from_surface (surface, 0, 0, width, height);
+	cairo_surface_destroy (surface);
+#else
 	pixbuf_blend (tmp, result, 0, 0, -1, -1, 0, 0, alpha);
+#endif
 
         g_object_unref (tmp);
 
@@ -2861,7 +2966,13 @@ pixbuf_draw_gradient (GdkPixbuf    *pixbuf,
 
 static void
 pixbuf_blend (GdkPixbuf *src,
+#if GTK_CHECK_VERSION (3, 0, 0)
+	      cairo_t   *cr,
+	      int        dest_width,
+              int        dest_height,
+#else
 	      GdkPixbuf *dest,
+#endif
 	      int	 src_x,
 	      int	 src_y,
 	      int	 src_width,
@@ -2870,8 +2981,10 @@ pixbuf_blend (GdkPixbuf *src,
 	      int	 dest_y,
 	      double	 alpha)
 {
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	int dest_width = gdk_pixbuf_get_width (dest);
 	int dest_height = gdk_pixbuf_get_height (dest);
+#endif
 	int offset_x = dest_x - src_x;
 	int offset_y = dest_y - src_y;
 
@@ -2895,29 +3008,47 @@ pixbuf_blend (GdkPixbuf *src,
 		src_height = dest_height - dest_y;
 	}
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+	gdk_cairo_set_source_pixbuf(cr, src, offset_x, offset_y);
+	cairo_rectangle (cr, offset_x, offset_y, src_width, src_height);
+	cairo_paint_with_alpha (cr, alpha);
+	cairo_fill (cr);
+#else
 	gdk_pixbuf_composite (src, dest,
 			      dest_x, dest_y,
 			      src_width, src_height,
 			      offset_x, offset_y,
 			      1, 1, GDK_INTERP_NEAREST,
 			      alpha * 0xFF + 0.5);
+#endif
 }
 
 static void
+#if GTK_CHECK_VERSION (3, 0, 0)
+pixbuf_tile (GdkPixbuf *src, cairo_t *cr, int dest_width, int dest_height)
+#else
 pixbuf_tile (GdkPixbuf *src, GdkPixbuf *dest)
+#endif
 {
 	int x, y;
 	int tile_width, tile_height;
+#if !GTK_CHECK_VERSION (3, 0, 0)
 	int dest_width = gdk_pixbuf_get_width (dest);
 	int dest_height = gdk_pixbuf_get_height (dest);
+#endif
 
 	tile_width = gdk_pixbuf_get_width (src);
 	tile_height = gdk_pixbuf_get_height (src);
 
 	for (y = 0; y < dest_height; y += tile_height) {
 		for (x = 0; x < dest_width; x += tile_width) {
+#if GTK_CHECK_VERSION (3, 0, 0)
+			pixbuf_blend (src, cr, dest_width, dest_height, 0, 0,
+				      tile_width, tile_height, x, y, 1.0);
+#else
 			pixbuf_blend (src, dest, 0, 0,
 				      tile_width, tile_height, x, y, 1.0);
+#endif
 		}
 	}
 }
@@ -3375,12 +3506,15 @@ mate_bg_changes_with_time (MateBG *bg)
 	return FALSE;
 }
 
-#if !GTK_CHECK_VERSION(3, 0, 0)
 /* Creates a thumbnail for a certain frame, where 'frame' is somewhat
  * vaguely defined as 'suitable point to show while single-stepping
  * through the slideshow'. Returns NULL if frame_num is out of bounds.
  */
+#if GTK_CHECK_VERSION (3, 0, 0)
+cairo_surface_t *
+#else
 GdkPixbuf *
+#endif
 mate_bg_create_frame_thumbnail (MateBG			*bg,
 				 MateDesktopThumbnailFactory	*factory,
 				 GdkScreen			*screen,
@@ -3389,7 +3523,11 @@ mate_bg_create_frame_thumbnail (MateBG			*bg,
 				 int				 frame_num)
 {
 	SlideShow *show;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_surface_t *result;
+#else
 	GdkPixbuf *result;
+#endif
 	GdkPixbuf *thumb;
         GList *l;
         int i, skipped;
@@ -3424,10 +3562,16 @@ mate_bg_create_frame_thumbnail (MateBG			*bg,
 	if (!found)
 		return NULL;
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+	result = cairo_image_surface_create(CAIRO_FORMAT_RGB24, dest_width, dest_height);
+	cairo_t *cr = cairo_create(result);
 
+	draw_color(bg, cr,  dest_width, dest_height);
+#else
 	result = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8, dest_width, dest_height);
 
 	draw_color (bg, result);
+#endif
 
 	if (bg->filename) {
 		thumb = create_img_thumbnail (bg, factory, screen,
@@ -3435,12 +3579,19 @@ mate_bg_create_frame_thumbnail (MateBG			*bg,
 					      frame_num + skipped);
 
 		if (thumb) {
+#if GTK_CHECK_VERSION (3, 0, 0)
+			draw_image_for_thumb (bg, thumb, cr,  dest_width, dest_height);
+#else
 			draw_image_for_thumb (bg, thumb, result);
+#endif
 			g_object_unref (thumb);
 		}
 	}
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+	cairo_destroy (cr);
+#endif
+
 	return result;
 }
-#endif
 
