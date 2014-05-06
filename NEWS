@@ -1,4 +1,17 @@
-mate-desktop 1.7.90
+mate-desktop 1.9.1
+
+  * Added MateColorButton class to have traditional color selection
+    dialog with GTK3
+
+mate-desktop 1.9.0
+
+  * Removed desktop-docs
+  * Removed user guide
+  * Removed libunique optional dependency
+  * Added MateAboutDialog class to have traditional about dialog with
+    GTK3 too
+
+mate-desktop 1.8.0
 
   * Added helpers for dconf and GSettings
   * Fix build with GTK3
