@@ -3,16 +3,19 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# tarakbumba . <tarakbumba@gmail.com>, 2014
 # hsngrms <dead-bodies-everywhere@hotmail.com>, 2012
+# hsngrms <dead-bodies-everywhere@hotmail.com>, 2012
+# mauron, 2012,2014
 # mauron, 2014
 # mauron, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: MATE Desktop Environment\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-02-22 10:56+0100\n"
-"PO-Revision-Date: 2014-02-23 11:39+0000\n"
-"Last-Translator: mauron\n"
+"POT-Creation-Date: 2014-04-23 22:55+0200\n"
+"PO-Revision-Date: 2014-04-29 22:09+0000\n"
+"Last-Translator: tarakbumba . <tarakbumba@gmail.com>\n"
 "Language-Team: Turkish (http://www.transifex.com/projects/p/MATE/language/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -30,42 +33,43 @@ msgstr "MATE hakkında daha fazla şey öğrenin"
 
 #. Translators should localize the following string which will be
 #. * displayed in the about box to give credit to the translator(s).
-#: ../mate-about/mate-about.c:113
+#: ../mate-about/mate-about.c:109
 msgid "translator-credits"
 msgstr "GNOME projesine katkıda bulunanlar:\nFatih Demir <kabalak@kabalak.net>, 2000.\nGörkem Çetin <gorkem@gelecek.com.tr>, 2002/2003.\nBarış Çicek <baris@teamforce.name.tr>, 2004, 2008, 2009.\nMuhammet Kara <muhammet.k@gmail.com>, 2011.\nMATE projesine katkıda bulunanlar:\nhsngrms\nAnonim iştirak"
 
-#: ../mate-about/mate-about.h:48
+#: ../mate-about/mate-about.h:50
 msgid ""
 "MATE provides an intuitive and attractive desktop to Linux users using "
 "traditional metaphors."
-msgstr "MATE, geleneksek metaforları tercih eden GNU/Linux kullanıcılarına çekici ve sezgisel bir masaüstü sağlar."
+msgstr "MATE, geleneksel metaforları tercih eden GNU/Linux kullanıcılarına çekici ve sezgisel bir masaüstü sağlar."
 
-#: ../mate-about/mate-about.h:51
+#: ../mate-about/mate-about.h:53
 msgid ""
 "MATE includes most of what you see on your computer, including the file "
 "manager, document viewer, image viewer, menus, and many applications."
 msgstr "MATE, dosya yöneticisi, belge ve resim görüntüleyicisi, menüler ve birçok uygulama da dahil olmak üzere, bilgisayarınızda gördüğünüz unsurların çoğunu içerir."
 
-#: ../mate-about/mate-about.h:54
+#: ../mate-about/mate-about.h:56
 msgid ""
 "MATE is a Free, usable, stable, accessible desktop environment for the Unix-"
 "like family of operating systems."
 msgstr "MATE, Unix benzeri işletim sistemleri ailesi için özgür, kullanışlı, kararlı, erişimi kolay bir masaüstü ortamıdır."
 
-#: ../mate-about/mate-about.h:57
+#: ../mate-about/mate-about.h:59
 msgid ""
-"MATE is a fork of GNOME 2. Hundreds of people have contributed code to GNOME"
-" since it was started in 1997; many more have contributed in other important"
-" ways, including translations, documentation, and quality assurance."
-msgstr "MATE, GNOME 2 çatallamasıdır. GNOME'un 1997 yılında başlangıcından beri yüzlerce kişi koda katkıda bulunmuş; çok daha fazla kişi de tercüme, belgeleme ve kalite güvencesi gibi başka önemli şekillerde katkıda bulunmuştur."
+"MATE is the continuation of GNOME 2. Hundreds of people have contributed "
+"code to GNOME since it was started in 1997; many more have contributed in "
+"other important ways, including translations, documentation, and quality "
+"assurance."
+msgstr "MATE, GNOME 2 Masaüstü' nün devamıdır. GNOME 1997 yılında başladığından beri yüzlerce kişi kodlamaya katkıda bulunmuştur. Çevirmenler, belgelendirme yapanlar ve kalite denetimi yapanlar da dahil olmak üzere, bir çoğu başka önemli şekillerde katkıda bulunmuştur."
 
-#: ../mate-about/mate-about.h:61
+#: ../mate-about/mate-about.h:63
 msgid ""
 "GNOME 2 was the most popular Linux desktop but it’s no longer available... "
 "MATE is here to provide that same desktop to you!"
 msgstr "GNOME 2 en popüler GNU/Linux masaüstüydü ancak artık yayınlanmıyor... MATE size aynı masaüstünü sağlar!"
 
-#: ../mate-about/mate-about.h:64
+#: ../mate-about/mate-about.h:66
 msgid ""
 "The name “MATE” comes from yerba maté, a species of holly native to "
 "subtropical South America. Its leaves contain caffeine and are used to make "
@@ -79,6 +83,165 @@ msgstr "“MATE” ismini yerba maté adlı Güney Amerika'ya özgü astropikal 
 msgctxt "Monitor vendor"
 msgid "Unknown"
 msgstr "Bilinmiyor"
+
+#: ../libmate-desktop/mate-aboutdialog.c:184
+msgid "Could not show link"
+msgstr "Bağlantı gösterilemiyor"
+
+#: ../libmate-desktop/mate-aboutdialog.c:240
+msgid "Program name"
+msgstr "Uygulama adı"
+
+#: ../libmate-desktop/mate-aboutdialog.c:241
+msgid ""
+"The name of the program. If this is not set, it defaults to "
+"g_get_application_name()"
+msgstr "Uygulamanın adı. Bu ayarlanmamışsa, g_get_application_name() olarak öntanımlı haline döner"
+
+#: ../libmate-desktop/mate-aboutdialog.c:255
+msgid "Program version"
+msgstr "Uygulama sürümü"
+
+#: ../libmate-desktop/mate-aboutdialog.c:256
+msgid "The version of the program"
+msgstr "Uygulamanın sürümü"
+
+#: ../libmate-desktop/mate-aboutdialog.c:270
+msgid "Copyright string"
+msgstr "Telif hakkı satırı"
+
+#: ../libmate-desktop/mate-aboutdialog.c:271
+msgid "Copyright information for the program"
+msgstr "Uygulamanın telif hakkı bilgisi"
+
+#: ../libmate-desktop/mate-aboutdialog.c:288
+msgid "Comments string"
+msgstr "Yorum satırı"
+
+#: ../libmate-desktop/mate-aboutdialog.c:289
+msgid "Comments about the program"
+msgstr "Uygulama hakkındaki yorumlar"
+
+#: ../libmate-desktop/mate-aboutdialog.c:307
+#: ../libmate-desktop/mate-aboutdialog.c:2128
+msgid "License"
+msgstr "Lisans"
+
+#: ../libmate-desktop/mate-aboutdialog.c:308
+msgid "The license of the program"
+msgstr "Uygulamanın lisansı"
+
+#: ../libmate-desktop/mate-aboutdialog.c:323
+msgid "Website URL"
+msgstr "Website URL"
+
+#: ../libmate-desktop/mate-aboutdialog.c:324
+msgid "The URL for the link to the website of the program"
+msgstr "Uygulamanın web sitesine URL bağlantısı"
+
+#: ../libmate-desktop/mate-aboutdialog.c:339
+msgid "Website label"
+msgstr "Website etiketi"
+
+#: ../libmate-desktop/mate-aboutdialog.c:340
+msgid ""
+"The label for the link to the website of the program. If this is not set, it"
+" defaults to the URL"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:356
+msgid "Authors"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:357
+msgid "List of authors of the program"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:373
+msgid "Documenters"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:374
+msgid "List of people documenting the program"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:390
+msgid "Artists"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:391
+msgid "List of people who have contributed artwork to the program"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:408
+msgid "Translator credits"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:409
+msgid ""
+"Credits to the translators. This string should be marked as translatable"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:424
+msgid "Logo"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:425
+msgid ""
+"A logo for the about box. If this is not set, it defaults to "
+"gtk_window_get_default_icon_list()"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:440
+msgid "Logo Icon Name"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:441
+msgid "A named icon to use as the logo for the about box."
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:454
+msgid "Wrap license"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:455
+msgid "Whether to wrap the license text."
+msgstr ""
+
+#. Add the credits button
+#: ../libmate-desktop/mate-aboutdialog.c:544
+msgid "C_redits"
+msgstr ""
+
+#. Add the license button
+#: ../libmate-desktop/mate-aboutdialog.c:558
+msgid "_License"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:833
+#, c-format
+msgid "About %s"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:2052
+msgid "Credits"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:2080
+msgid "Written by"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:2083
+msgid "Documented by"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:2095
+msgid "Translated by"
+msgstr ""
+
+#: ../libmate-desktop/mate-aboutdialog.c:2099
+msgid "Artwork by"
+msgstr ""
 
 #: ../libmate-desktop/mate-desktop-item.c:220
 #, c-format
@@ -465,7 +628,7 @@ msgstr "Masaüstü İkonlarını Görüntüle"
 
 #: ../schemas/org.mate.background.gschema.xml.in.in.h:4
 msgid "Have MATE file manager (Caja) draw the desktop icons."
-msgstr "MATE dosya yöneticisinin (Caja) masaüstü ikonlarını çizmesini sağlar."
+msgstr "MATE dosya yöneticisinin (Caja) masaüstü simgelerini çizmesini sağlar."
 
 #: ../schemas/org.mate.background.gschema.xml.in.in.h:5
 msgid "Fade the background on change"
@@ -537,7 +700,7 @@ msgstr "Dosya İkon Teması"
 
 #: ../schemas/org.mate.file-views.gschema.xml.in.in.h:2
 msgid "Theme used for displaying file icons."
-msgstr "Dosya ikonlarının görüntülenmesi için kullanılacak tema."
+msgstr "Dosya simgelerinin görüntülenmesi için kullanılacak tema."
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:1
 msgid "Enable Accessibility"
@@ -589,7 +752,7 @@ msgstr "Menülerde İkon Bulunur"
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:12
 msgid "Whether menus may display an icon next to a menu entry."
-msgstr "Menülerin bir menü unsurunun yanında ikon görüntüleyip görüntülemeyeceklerini belirler."
+msgstr "Menülerin bir menü unsurunun yanında simge görüntüleyip görüntülemeyeceklerini belirler."
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:13
 msgid "Buttons Have Icons"
@@ -597,7 +760,7 @@ msgstr "Düğmelerde İkon Bulunur"
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:14
 msgid "Whether buttons may display an icon in addition to the button text."
-msgstr "Düğmelerin düğme metninin yanında bir ikon görüntüleyip görüntülemeyeceklerini belirler."
+msgstr "Düğmelerin düğme metninin yanında bir simge görüntüleyip görüntülemeyeceklerini belirler."
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:15
 msgid "Menubar Detachable"
@@ -621,7 +784,7 @@ msgstr "Araç Çubuğu İkon Boyutu"
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:20
 msgid "Size of icons in toolbars, either \"small-toolbar\" or \"large-toolbar\"."
-msgstr "Araç çubuklarındaki ikonların boyutu, ya \"small-toolbar\" ya da \"large-toolbar\"."
+msgstr "Araç çubuklarındaki simgelerin boyutu, ya \"small-toolbar\" ya da \"large-toolbar\"."
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:21
 msgid "Cursor Blink"
@@ -645,7 +808,7 @@ msgstr "İkon Teması"
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:26
 msgid "Icon theme to use for the panel, caja etc."
-msgstr "Panel, caja vs. için kullanılacak ikon teması."
+msgstr "Panel, caja vs. için kullanılacak simge teması."
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:27
 msgid "Gtk+ Theme"
@@ -1090,11 +1253,3 @@ msgstr "MATE 1.4 ayarlarını taşı"
 #: ../tools/mate-conf-import.desktop.in.in.h:2
 msgid "Tool to migrate MATE 1.4 settings to MATE 1.6"
 msgstr "MATE 1.4 ayarlarını MATE 1.6'ya taşıyacak araç"
-
-#: ../user-guide/mate-user-guide.desktop.in.in.h:1
-msgid "Help"
-msgstr "Yardım"
-
-#: ../user-guide/mate-user-guide.desktop.in.in.h:2
-msgid "Get help with MATE"
-msgstr "MATE hakkında yardım al"

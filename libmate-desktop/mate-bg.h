@@ -40,15 +40,6 @@
 extern "C" {
 #endif
 
-
-#ifndef MATE_DEPRECATED_FOR
-#if GTK_CHECK_VERSION (3, 0, 0)
-#define MATE_DEPRECATED_FOR(func) G_DEPRECATED_FOR(func)
-#else
-#define MATE_DEPRECATED_FOR(func)
-#endif
-#endif
-
 #define MATE_TYPE_BG            (mate_bg_get_type ())
 #define MATE_BG(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), MATE_TYPE_BG, MateBG))
 #define MATE_BG_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass),  MATE_TYPE_BG, MateBGClass))
@@ -110,13 +101,13 @@ void             mate_bg_set_filename          (MateBG               *bg,
 						 const char            *filename);
 void             mate_bg_set_placement         (MateBG               *bg,
 						 MateBGPlacement       placement);
-#if GTK_CHECK_VERSION (3, 0, 0)
+
+#if GTK_CHECK_VERSION(3, 0, 0)
 void             mate_bg_set_rgba             (MateBG               *bg,
-						 MateBGColorType     type,
-						 GdkRGBA             *primary,
-						 GdkRGBA             *secondary);
+						 MateBGColorType       type,
+						 GdkRGBA              *primary,
+						 GdkRGBA              *secondary);
 #endif
-MATE_DEPRECATED_FOR(mate_bg_set_rgba)
 void             mate_bg_set_color             (MateBG               *bg,
 						 MateBGColorType       type,
 						 GdkColor              *primary,
@@ -126,15 +117,12 @@ void		 mate_bg_set_draw_background   (MateBG		     *bg,
 /* Getters */
 gboolean	 mate_bg_get_draw_background   (MateBG		     *bg);
 MateBGPlacement  mate_bg_get_placement         (MateBG               *bg);
-
 #if GTK_CHECK_VERSION (3, 0, 0)
 void		 mate_bg_get_rgba             (MateBG               *bg,
 						 MateBGColorType      *type,
 						 GdkRGBA              *primary,
 						 GdkRGBA              *secondary);
 #endif
-
-MATE_DEPRECATED_FOR(mate_bg_get_rgba)
 void		 mate_bg_get_color             (MateBG               *bg,
 						 MateBGColorType      *type,
 						 GdkColor              *primary,
@@ -142,16 +130,18 @@ void		 mate_bg_get_color             (MateBG               *bg,
 const gchar *    mate_bg_get_filename          (MateBG               *bg);
 
 /* Drawing and thumbnailing */
+#if GTK_CHECK_VERSION (3, 0, 0)
 void             mate_bg_draw                  (MateBG               *bg,
-#if GTK_CHECK_VERSION(3, 0, 0)
-						cairo_t		     *cr,
-						gint			width,
-						gint			height,
+						cairo_t  *cr,
+						gint     width,
+						gint     height,
+                                                gboolean               is_root);
 #else
+void             mate_bg_draw                  (MateBG               *bg,
 						 GdkPixbuf             *dest,
 						 GdkScreen	       *screen,
-#endif
                                                  gboolean               is_root);
+#endif
 
 #if GTK_CHECK_VERSION(3, 0, 0)
 cairo_surface_t *mate_bg_create_surface        (MateBG               *bg,
