@@ -101,8 +101,7 @@ void             mate_bg_set_filename          (MateBG               *bg,
 						 const char            *filename);
 void             mate_bg_set_placement         (MateBG               *bg,
 						 MateBGPlacement       placement);
-
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION (3, 0, 0)
 void             mate_bg_set_rgba             (MateBG               *bg,
 						 MateBGColorType       type,
 						 GdkRGBA              *primary,
