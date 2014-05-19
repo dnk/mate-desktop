@@ -1,6 +1,6 @@
 m4_define([mate_platform], [1])
-m4_define([mate_minor], [7])
-m4_define([mate_micro], [90])
+m4_define([mate_minor], [9])
+m4_define([mate_micro], [1])
 
 m4_define(mate_version, [mate_platform.mate_minor.mate_micro]),
 
@@ -74,20 +74,12 @@ if test "x$enable_deprecation_flags" = "xyes"; then
    AC_SUBST(DISABLE_DEPRECATED_CFLAGS)
 fi
 
-# Should we build mate-about or the shared desktop docs? Useful for people who
-# need to build two mate-desktop using two different versions of GTK+
+# Should we build mate-about? Useful for people who need to build
+# two mate-desktop using two different versions of GTK+
 AC_ARG_ENABLE([mate-about],
 	[AS_HELP_STRING([--disable-mate-about],[dont build mate-about])],
 	[],[enable_mate_about=yes])
 AM_CONDITIONAL(MATE_ABOUT_ENABLED, test "x$enable_mate_about" = "xyes")
-AC_ARG_ENABLE([desktop-docs],
-	[AS_HELP_STRING([--disable-desktop-docs],[do not build desktop-wide help documents])],
-	[],[enable_desktop_docs=yes])
-AM_CONDITIONAL(DESKTOP_DOCS_ENABLED, test "x$enable_desktop_docs" = "xyes")
-AC_ARG_ENABLE([user-guide],
-	[AS_HELP_STRING([--disable-user-guide],[do not build user guide])],
-	[],[enable_user_guide=yes])
-AM_CONDITIONAL(USER_GUIDE_ENABLED, test "x$enable_user_guide" = "xyes")
 
 
 # Install tool to migrate 1.4 MateConf settings
@@ -150,7 +142,7 @@ case "$with_gtk" in
 esac
 
 GDK_PIXBUF_REQUIRED=2.4.0
-GLIB_REQUIRED=2.19.1
+GLIB_REQUIRED=2.26.0
 GIO_REQUIRED=2.26.0
 XRANDR_REQUIRED=1.2
 
@@ -269,34 +261,6 @@ AC_SUBST(GETTEXT_PACKAGE)
 
 AM_GLIB_GNU_GETTEXT
 
-dnl ============================================================================
-dnl | se comprueba unique
-dnl | de lo contrario, se intenta utilizar libunique
-dnl ============================================================================
-case "$with_gtk" in
-	2.0) LIBUNIQUE_VERSION=1.0
-		;;
-	3.0) LIBUNIQUE_VERSION=3.0
-		;;
-esac
-
-PKG_CHECK_MODULES(UNIQUE, unique-$LIBUNIQUE_VERSION, enable_libunique=yes, enable_libunique=no)
-
-AC_SUBST([UNIQUE_CFLAGS])
-AC_SUBST([UNIQUE_LIBS])
-
-AC_ARG_ENABLE(unique, [  --enable-unique         enable the use of libunique instead of g_application or gtk_application], enable_libunique=yes,)
-
-if test "x$enable_libunique" = "xyes"; then
-	UNIQUE_CFLAGS="$UNIQUE_CFLAGS -DUSE_UNIQUE=1"
-	# fix for deprecated on 2.26
-	# unique en la version 1.0, contiene simbolos no definidos a partir de
-	# glib 2.26, pero puede ser obviado si se utiliza -DG_CONST_RETURN=const
-	if $PKG_CONFIG --atleast-version 2.26 glib-2.0; then
-		UNIQUE_CFLAGS="$UNIQUE_CFLAGS -DG_CONST_RETURN=const"
-	fi
-fi
-
 GLIB_GSETTINGS
 
 dnl Do not use AC_PROG_AWK since we need the full pathname.
@@ -332,16 +296,10 @@ docs/reference/Makefile
 docs/reference/mate-desktop/Makefile
 mate-version.xml.in
 po/Makefile.in
-desktop-docs/Makefile
-desktop-docs/fdl/Makefile
-desktop-docs/gpl/Makefile
-desktop-docs/lgpl/Makefile
 schemas/Makefile
 man/Makefile
 tools/mate-conf-import.desktop.in
 tools/Makefile
-user-guide/Makefile
-user-guide/mate-user-guide.desktop.in
 ])
 
 AC_OUTPUT
@@ -369,9 +327,6 @@ mate-desktop $VERSION `echo mate-desktop $VERSION | sed "s/./=/g"`
 
     Gtk+ version:                 ${GTK_API_VERSION}
     Build mate-about:             ${enable_mate_about}
-    Use libunique:                ${enable_libunique}
-    Build desktop-wide docs:      ${enable_desktop_docs}
-    Build user guide:             ${enable_user_guide}
     Install mate-conf-import:     ${enable_mate_conf_import}
     Install mpaste:               ${enable_mpaste}
     Use external pnp.ids:         ${EXTERNAL_PNP_IDS}
