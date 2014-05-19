@@ -53,4 +53,6 @@ main (int argc, char **argv)
 
     /* start application */
     gtk_main ();
+
+    return 0;
 }

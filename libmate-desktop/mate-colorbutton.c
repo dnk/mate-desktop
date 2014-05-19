@@ -270,9 +270,9 @@ expose_event (GtkWidget      *widget,
 #endif
 {
   MateColorButton *color_button = MATE_COLOR_BUTTON (data);
-  GtkAllocation allocation;
   cairo_pattern_t *checkered;
 #if !GTK_CHECK_VERSION (3, 0, 0)
+  GtkAllocation allocation;
   cairo_t *cr;
 
   cr = gdk_cairo_create (event->window);

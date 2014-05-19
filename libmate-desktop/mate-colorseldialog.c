@@ -132,8 +132,10 @@ mate_color_selection_dialog_init (MateColorSelectionDialog *colorseldiag)
 
   gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
   gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_content_area (dialog)), 2); /* 2 * 5 + 2 = 12 */
+#if !GTK_CHECK_VERSION (3, 12, 0)
   gtk_container_set_border_width (GTK_CONTAINER (gtk_dialog_get_action_area (dialog)), 5);
   gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_action_area (dialog)), 6);
+#endif
 
   colorseldiag->colorsel = mate_color_selection_new ();
   gtk_container_set_border_width (GTK_CONTAINER (colorseldiag->colorsel), 5);
@@ -143,26 +145,40 @@ mate_color_selection_dialog_init (MateColorSelectionDialog *colorseldiag)
   gtk_widget_show (colorseldiag->colorsel);
   
   colorseldiag->cancel_button = gtk_dialog_add_button (GTK_DIALOG (colorseldiag),
+#if GTK_CHECK_VERSION (3, 10, 0)
+                                                       _("_Cancel"),
+#else
                                                        GTK_STOCK_CANCEL,
+#endif
                                                        GTK_RESPONSE_CANCEL);
 
   colorseldiag->ok_button = gtk_dialog_add_button (GTK_DIALOG (colorseldiag),
+#if GTK_CHECK_VERSION (3, 10, 0)
+                                                   _("_OK"),
+#else
                                                    GTK_STOCK_OK,
+#endif
                                                    GTK_RESPONSE_OK);
                                                    
   gtk_widget_grab_default (colorseldiag->ok_button);
   
   colorseldiag->help_button = gtk_dialog_add_button (GTK_DIALOG (colorseldiag),
+#if GTK_CHECK_VERSION (3, 10, 0)
+                                                     _("_Help"),
+#else
                                                      GTK_STOCK_HELP,
+#endif
                                                      GTK_RESPONSE_HELP);
 
   gtk_widget_hide (colorseldiag->help_button);
 
+#if !GTK_CHECK_VERSION (3, 10, 0)
   gtk_dialog_set_alternative_button_order (GTK_DIALOG (colorseldiag),
 					   GTK_RESPONSE_OK,
 					   GTK_RESPONSE_CANCEL,
 					   GTK_RESPONSE_HELP,
 					   -1);
+#endif
 
   gtk_window_set_title (GTK_WINDOW (colorseldiag),
                         _("Color Selection"));

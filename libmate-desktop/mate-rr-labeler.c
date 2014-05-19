@@ -321,7 +321,11 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 	GtkWidget *widget;
 	char *str;
 	const char *display_name;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	GdkRGBA black = { 0., 0., 0., 1. };
+#else
 	GdkColor black = { 0, 0, 0, 0 };
+#endif
 
 	window = gtk_window_new (GTK_WINDOW_POPUP);
 	gtk_widget_set_app_paintable (window, TRUE);
@@ -363,7 +367,11 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 	 * theme's colors, since the label is always shown against a light
 	 * pastel background.  See bgo#556050
 	 */
+#if GTK_CHECK_VERSION (3, 0, 0)
+	gtk_widget_override_color(widget, gtk_widget_get_state_flags (widget), &black);
+#else
 	gtk_widget_modify_fg (widget, gtk_widget_get_state (widget), &black);
+#endif
 
 	gtk_container_add (GTK_CONTAINER (window), widget);
 
