@@ -112,11 +112,11 @@ test_ditem_LDADD = \
 	$(MATE_DESKTOP_LIBS)
 else
 test_LDADD = \
-	libmate-desktop-3.la		\
+	libmate-desktop-2.la		\
 	$(MATE_DESKTOP_LIBS)
 
 test_ditem_LDADD = \
-	libmate-desktop-3.la		\
+	libmate-desktop-2.la		\
 	$(XLIB_LIBS)			\
 	$(MATE_DESKTOP_LIBS)
 endif
