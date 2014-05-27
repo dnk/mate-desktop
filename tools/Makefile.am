@@ -8,9 +8,16 @@ mate_color_select_CFLAGS = \
 	-DLOCALE_DIR=\"$(datadir)/locale\" \
 	$(MATE_DESKTOP_CFLAGS)
 
+if USE_GTK3
+mate_color_select_LDADD = \
+	$(top_builddir)/libmate-desktop/libmate-desktop-3.la \
+	$(MATE_DESKTOP_LIBS)
+
+else
 mate_color_select_LDADD = \
 	$(top_builddir)/libmate-desktop/libmate-desktop-2.la \
 	$(MATE_DESKTOP_LIBS)
+endif
 
 @INTLTOOL_DESKTOP_RULE@
 
