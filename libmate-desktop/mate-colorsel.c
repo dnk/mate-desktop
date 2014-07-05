@@ -32,20 +32,14 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
-#if GTK_CHECK_VERSION (3, 0, 0)
-#include <gdk/gdkkeysyms-compat.h>
-#else
-#include <gdkconfig.h>
-#endif
 #include <glib/gi18n-lib.h>
 #include "mate-colorsel.h"
 
-/* Keep it in sync with gtksettings.c:default_color_palette */
-#define DEFAULT_COLOR_PALETTE   "black:white:gray50:red:purple:blue:light blue:green:yellow:orange:lavender:brown:goldenrod4:dodger blue:pink:light green:gray10:gray30:gray75:gray90"
+#define DEFAULT_COLOR_PALETTE "#ef2929:#fcaf3e:#fce94f:#8ae234:#729fcf:#ad7fa8:#e9b96e:#888a85:#eeeeec:#cc0000:#f57900:#edd400:#73d216:#3465a4:#75507b:#c17d11:#555753:#d3d7cf:#a40000:#ce5c00:#c4a000:#4e9a06:#204a87:#5c3566:#8f5902:#2e3436:#babdb6:#000000:#2e3436:#555753:#888a85:#babdb6:#d3d7cf:#eeeeec:#f3f3f3:#ffffff"
 
 /* Number of elements in the custom palatte */
-#define GTK_CUSTOM_PALETTE_WIDTH 10
-#define GTK_CUSTOM_PALETTE_HEIGHT 2
+#define GTK_CUSTOM_PALETTE_WIDTH 9
+#define GTK_CUSTOM_PALETTE_HEIGHT 4
 
 #define CUSTOM_PALETTE_ENTRY_WIDTH   20
 #define CUSTOM_PALETTE_ENTRY_HEIGHT  20
@@ -79,7 +73,8 @@ enum {
   PROP_HAS_PALETTE,
   PROP_HAS_OPACITY_CONTROL,
   PROP_CURRENT_COLOR,
-  PROP_CURRENT_ALPHA
+  PROP_CURRENT_ALPHA,
+  PROP_HEX_STRING
 };
 
 enum {
@@ -138,11 +133,7 @@ struct _ColorSelectionPrivate
 };
 
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 static void mate_color_selection_dispose		(GObject		 *object);
-#else
-static void mate_color_selection_destroy		(GtkObject		 *object);
-#endif
 static void mate_color_selection_finalize        (GObject		 *object);
 static void update_color			(MateColorSelection	 *colorsel);
 static void mate_color_selection_set_property    (GObject                 *object,
@@ -294,9 +285,6 @@ static void
 mate_color_selection_class_init (MateColorSelectionClass *klass)
 {
   GObjectClass *gobject_class;
-#if !GTK_CHECK_VERSION (3, 0, 0)
-  GtkObjectClass *object_class;
-#endif
   GtkWidgetClass *widget_class;
   
   gobject_class = G_OBJECT_CLASS (klass);
@@ -304,12 +292,7 @@ mate_color_selection_class_init (MateColorSelectionClass *klass)
   gobject_class->set_property = mate_color_selection_set_property;
   gobject_class->get_property = mate_color_selection_get_property;
 
-#if GTK_CHECK_VERSION (3, 0, 0)
   gobject_class->dispose = mate_color_selection_dispose;
-#else
-  object_class = GTK_OBJECT_CLASS (klass);
-  object_class->destroy = mate_color_selection_destroy;
-#endif
 
   widget_class = GTK_WIDGET_CLASS (klass);
   widget_class->realize = mate_color_selection_realize;
@@ -345,14 +328,18 @@ mate_color_selection_class_init (MateColorSelectionClass *klass)
 						      _("The current opacity value (0 fully transparent, 65535 fully opaque)"),
 						      0, 65535, 65535,
 						      G_PARAM_READWRITE));
-  
+  g_object_class_install_property (gobject_class,
+                                   PROP_HEX_STRING,
+                                   g_param_spec_string ("hex-string",
+                                                       _("HEX String"),
+                                                       _("The hexadecimal string of current color"),
+                                                       "",
+                                                       G_PARAM_READABLE));
+
+
   color_selection_signals[COLOR_CHANGED] =
     g_signal_new ("color-changed",
-#if GTK_CHECK_VERSION (3, 0, 0)
 		  G_OBJECT_CLASS_TYPE (gobject_class),
-#else
-		  G_OBJECT_CLASS_TYPE (object_class),
-#endif
 		  G_SIGNAL_RUN_FIRST,
 		  G_STRUCT_OFFSET (MateColorSelectionClass, color_changed),
 		  NULL, NULL,
@@ -593,6 +580,7 @@ mate_color_selection_get_property (GObject     *object,
 				  GParamSpec  *pspec)
 {
   MateColorSelection *colorsel = MATE_COLOR_SELECTION (object);
+  ColorSelectionPrivate *priv = colorsel->private_data;
   GdkColor color;
   
   switch (prop_id)
@@ -610,13 +598,15 @@ mate_color_selection_get_property (GObject     *object,
     case PROP_CURRENT_ALPHA:
       g_value_set_uint (value, mate_color_selection_get_current_alpha (colorsel));
       break;
+    case PROP_HEX_STRING:
+      g_value_set_string (value, gtk_editable_get_chars (GTK_EDITABLE (priv->hex_entry), 0, -1));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
 }
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 static void
 mate_color_selection_dispose (GObject *object)
 {
@@ -631,24 +621,6 @@ mate_color_selection_dispose (GObject *object)
 
   G_OBJECT_CLASS (mate_color_selection_parent_class)->dispose (object);
 }
-#else
-/* GtkObject methods */
-
-static void
-mate_color_selection_destroy (GtkObject *object)
-{
-  MateColorSelection *cselection = MATE_COLOR_SELECTION (object);
-  ColorSelectionPrivate *priv = cselection->private_data;
-
-  if (priv->dropper_grab_widget)
-    {
-      gtk_widget_destroy (priv->dropper_grab_widget);
-      priv->dropper_grab_widget = NULL;
-    }
-
-  GTK_OBJECT_CLASS (mate_color_selection_parent_class)->destroy (object);
-}
-#endif
 
 /* GtkWidget methods */
 
@@ -1285,42 +1257,15 @@ palette_drag_end (GtkWidget      *widget,
 static GdkColor *
 get_current_colors (MateColorSelection *colorsel)
 {
-  GtkSettings *settings;
   GdkColor *colors = NULL;
   gint n_colors = 0;
-  gchar *palette;
 
-  settings = gtk_widget_get_settings (GTK_WIDGET (colorsel));
-  g_object_get (settings, "gtk-color-palette", &palette, NULL);
-  
-  if (!mate_color_selection_palette_from_string (palette, &colors, &n_colors))
-    {
-      mate_color_selection_palette_from_string (DEFAULT_COLOR_PALETTE,
-                                               &colors,
-                                               &n_colors);
-    }
-  else
-    {
-      /* If there are less colors provided than the number of slots in the
-       * color selection, we fill in the rest from the defaults.
-       */
-      if (n_colors < (GTK_CUSTOM_PALETTE_WIDTH * GTK_CUSTOM_PALETTE_HEIGHT))
-	{
-	  GdkColor *tmp_colors = colors;
-	  gint tmp_n_colors = n_colors;
-	  
-	  mate_color_selection_palette_from_string (DEFAULT_COLOR_PALETTE,
-                                                   &colors,
-                                                   &n_colors);
-	  memcpy (colors, tmp_colors, sizeof (GdkColor) * tmp_n_colors);
-
-	  g_free (tmp_colors);
-	}
-    }
+  mate_color_selection_palette_from_string (DEFAULT_COLOR_PALETTE,
+                                            &colors,
+                                            &n_colors);
 
   /* make sure that we fill every slot */
   g_assert (n_colors == GTK_CUSTOM_PALETTE_WIDTH * GTK_CUSTOM_PALETTE_HEIGHT);
-  g_free (palette);
   
   return colors;
 }
@@ -1664,11 +1609,11 @@ palette_activate (GtkWidget   *widget,
 		  gpointer     data)
 {
   /* should have a drawing area subclass with an activate signal */
-  if ((event->keyval == GDK_space) ||
-      (event->keyval == GDK_Return) ||
-      (event->keyval == GDK_ISO_Enter) ||
-      (event->keyval == GDK_KP_Enter) ||
-      (event->keyval == GDK_KP_Space))
+  if ((event->keyval == GDK_KEY_space) ||
+      (event->keyval == GDK_KEY_Return) ||
+      (event->keyval == GDK_KEY_ISO_Enter) ||
+      (event->keyval == GDK_KEY_KP_Enter) ||
+      (event->keyval == GDK_KEY_KP_Space))
     {
       if (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (widget), "color_set")) != 0)
         {
@@ -1974,15 +1919,15 @@ key_press (GtkWidget   *invisible,
 
   switch (event->keyval) 
     {
-    case GDK_space:
-    case GDK_Return:
-    case GDK_ISO_Enter:
-    case GDK_KP_Enter:
-    case GDK_KP_Space:
+    case GDK_KEY_space:
+    case GDK_KEY_Return:
+    case GDK_KEY_ISO_Enter:
+    case GDK_KEY_KP_Enter:
+    case GDK_KEY_KP_Space:
       grab_color_at_mouse (screen, x, y, data);
       /* fall through */
 
-    case GDK_Escape:
+    case GDK_KEY_Escape:
       shutdown_eyedropper (data);
       
       g_signal_handlers_disconnect_by_func (invisible,
@@ -1995,23 +1940,23 @@ key_press (GtkWidget   *invisible,
       return TRUE;
 
 #if defined GDK_WINDOWING_X11 || defined GDK_WINDOWING_WIN32
-    case GDK_Up:
-    case GDK_KP_Up:
+    case GDK_KEY_Up:
+    case GDK_KEY_KP_Up:
       dy = state == GDK_MOD1_MASK ? -BIG_STEP : -1;
       break;
 
-    case GDK_Down:
-    case GDK_KP_Down:
+    case GDK_KEY_Down:
+    case GDK_KEY_KP_Down:
       dy = state == GDK_MOD1_MASK ? BIG_STEP : 1;
       break;
 
-    case GDK_Left:
-    case GDK_KP_Left:
+    case GDK_KEY_Left:
+    case GDK_KEY_KP_Left:
       dx = state == GDK_MOD1_MASK ? -BIG_STEP : -1;
       break;
 
-    case GDK_Right:
-    case GDK_KP_Right:
+    case GDK_KEY_Right:
+    case GDK_KEY_KP_Right:
       dx = state == GDK_MOD1_MASK ? BIG_STEP : 1;
       break;
 #endif
@@ -3090,7 +3035,7 @@ mate_color_selection_set_change_palette_hook (MateColorSelectionChangePaletteFun
  * 
  * Return value: the previous change palette hook (that was replaced).
  *
- * Since: 2.2
+ * Since: 1.9.1
  **/
 MateColorSelectionChangePaletteWithScreenFunc
 mate_color_selection_set_change_palette_with_screen_hook (MateColorSelectionChangePaletteWithScreenFunc func)

@@ -144,7 +144,7 @@ esac
 AM_CONDITIONAL([USE_GTK3], [test "x$GTK_API_VERSION" = "x3.0"])
 
 GDK_PIXBUF_REQUIRED=2.4.0
-GLIB_REQUIRED=2.26.0
+GLIB_REQUIRED=2.36.0
 GIO_REQUIRED=2.26.0
 XRANDR_REQUIRED=1.2
 
@@ -316,7 +316,8 @@ dnl - Show summary
 dnl ---------------------------------------------------------------------------
 
 echo "
-mate-desktop $VERSION `echo mate-desktop $VERSION | sed "s/./=/g"`
+mate-desktop $VERSION
+`echo mate-desktop $VERSION | sed "s/./=/g"`
 
     prefix:                       ${prefix}
     exec_prefix:                  ${exec_prefix}

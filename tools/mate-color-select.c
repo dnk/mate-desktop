@@ -26,16 +26,32 @@
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 #include <libmate-desktop/mate-colorseldialog.h>
+#include <libmate-desktop/mate-colorsel.h>
 
 #define mate_gettext(package, locale, codeset) \
     bindtextdomain(package, locale); \
     bind_textdomain_codeset(package, codeset); \
     textdomain(package);
 
+gboolean
+copy_color (GtkWidget *widget, GdkEvent  *event, MateColorSelectionDialog *color_dialog)
+{
+    GdkColor color;
+    gchar *color_string;
+
+    mate_color_selection_get_current_color (color_dialog->colorsel, &color);
+    g_object_get (color_dialog->colorsel, "hex-string", &color_string, NULL);
+
+    gtk_clipboard_set_text (gtk_clipboard_get (GDK_SELECTION_CLIPBOARD), color_string, -1);
+
+    g_free (color_string);
+}
+
 int
 main (int argc, char **argv)
 {
     GtkWidget *color_dialog = NULL;
+    GtkWidget *widget;
 
     mate_gettext (GETTEXT_PACKAGE, LOCALE_DIR, "UTF-8");
 
@@ -49,8 +65,18 @@ main (int argc, char **argv)
     color_dialog = mate_color_selection_dialog_new (_("MATE Color Selection"));
 #endif
 
+    mate_color_selection_set_has_palette (MATE_COLOR_SELECTION_DIALOG (color_dialog)->colorsel, TRUE);
+
     /* quit signal */
     g_signal_connect (color_dialog, "destroy", gtk_main_quit, NULL);
+
+    widget = gtk_button_new_from_stock (GTK_STOCK_COPY);
+    gtk_container_add (gtk_dialog_get_action_area (GTK_DIALOG (color_dialog)), widget);
+    g_signal_connect (widget, "button-release-event", copy_color, color_dialog);
+
+    widget = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
+    gtk_container_add (gtk_dialog_get_action_area (GTK_DIALOG (color_dialog)), widget);
+    g_signal_connect (widget, "button-release-event", gtk_main_quit, NULL);
 
     gtk_widget_show_all (color_dialog);
     gtk_widget_hide (MATE_COLOR_SELECTION_DIALOG (color_dialog)->ok_button);
