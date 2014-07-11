@@ -100,6 +100,12 @@ void             mate_bg_set_filename          (MateBG               *bg,
 						 const char            *filename);
 void             mate_bg_set_placement         (MateBG               *bg,
 						 MateBGPlacement       placement);
+#if GTK_CHECK_VERSION (3, 0, 0)
+void             mate_bg_set_rgba             (MateBG               *bg,
+						 MateBGColorType       type,
+						 GdkRGBA              *primary,
+						 GdkRGBA              *secondary);
+#endif
 void             mate_bg_set_color             (MateBG               *bg,
 						 MateBGColorType       type,
 						 GdkColor              *primary,
@@ -109,6 +115,12 @@ void		 mate_bg_set_draw_background   (MateBG		     *bg,
 /* Getters */
 gboolean	 mate_bg_get_draw_background   (MateBG		     *bg);
 MateBGPlacement  mate_bg_get_placement         (MateBG               *bg);
+#if GTK_CHECK_VERSION (3, 0, 0)
+void		 mate_bg_get_rgba             (MateBG               *bg,
+						 MateBGColorType      *type,
+						 GdkRGBA              *primary,
+						 GdkRGBA              *secondary);
+#endif
 void		 mate_bg_get_color             (MateBG               *bg,
 						 MateBGColorType      *type,
 						 GdkColor              *primary,
@@ -116,10 +128,18 @@ void		 mate_bg_get_color             (MateBG               *bg,
 const gchar *    mate_bg_get_filename          (MateBG               *bg);
 
 /* Drawing and thumbnailing */
+#if GTK_CHECK_VERSION (3, 0, 0)
+void             mate_bg_draw                  (MateBG               *bg,
+						cairo_t  *cr,
+						gint     width,
+						gint     height,
+                                                gboolean               is_root);
+#else
 void             mate_bg_draw                  (MateBG               *bg,
 						 GdkPixbuf             *dest,
 						 GdkScreen	       *screen,
                                                  gboolean               is_root);
+#endif
 
 #if GTK_CHECK_VERSION(3, 0, 0)
 cairo_surface_t *mate_bg_create_surface        (MateBG               *bg,

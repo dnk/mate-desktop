@@ -136,7 +136,9 @@ static void                 mate_about_dialog_set_property   (GObject           
                                                               GParamSpec         *pspec);
 static void                 mate_about_dialog_show           (GtkWidget          *widge);
 static void                 update_name_version              (MateAboutDialog    *about);
+#if !GTK_CHECK_VERSION (3, 10, 0)
 static GtkIconSet *         icon_set_new_from_pixbufs        (GList              *pixbufs);
+#endif
 static void                 follow_if_link                   (MateAboutDialog    *about,
                                                               GtkTextView        *text_view,
                                                               GtkTextIter        *iter);
@@ -489,12 +491,18 @@ mate_about_dialog_init (MateAboutDialog *about)
 
   gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
   gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_content_area (dialog)), 2); /* 2 * 5 + 2 = 12 */
+#if !GTK_CHECK_VERSION (3, 12, 0)
   gtk_container_set_border_width (GTK_CONTAINER (gtk_dialog_get_action_area (dialog)), 5);
+#endif
 
   /* Widgets */
   gtk_widget_push_composite_child ();
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
+#else
   vbox = gtk_vbox_new (FALSE, 8);
+#endif
   gtk_container_set_focus_chain (GTK_CONTAINER (vbox), NULL);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 5);
   gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (dialog)), vbox, TRUE, TRUE, 0);
@@ -521,7 +529,12 @@ mate_about_dialog_init (MateAboutDialog *about)
   gtk_label_set_justify (GTK_LABEL (priv->copyright_label), GTK_JUSTIFY_CENTER);
   gtk_box_pack_start (GTK_BOX (vbox), priv->copyright_label, FALSE, FALSE, 0);
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_set_homogeneous(GTK_BOX(hbox), TRUE);
+#else
   hbox = gtk_hbox_new (TRUE, 0);
+#endif
   gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, FALSE, 0);
 
   priv->website_label = button = gtk_label_new ("");
@@ -537,14 +550,23 @@ mate_about_dialog_init (MateAboutDialog *about)
   gtk_widget_show (hbox);
 
   /* Add the close button */
+#if GTK_CHECK_VERSION (3, 10, 0)
+  close_button = gtk_dialog_add_button (GTK_DIALOG (about), _("_Close"),
+                                        GTK_RESPONSE_CANCEL);
+#else
   close_button = gtk_dialog_add_button (GTK_DIALOG (about), GTK_STOCK_CLOSE,
                                         GTK_RESPONSE_CANCEL);
+#endif
   gtk_dialog_set_default_response (GTK_DIALOG (about), GTK_RESPONSE_CANCEL);
 
   /* Add the credits button */
   button = gtk_button_new_with_mnemonic (_("C_redits"));
   gtk_widget_set_can_default (button, TRUE);
+#if GTK_CHECK_VERSION (3, 10, 0)
+  image = gtk_image_new_from_icon_name ("help-about", GTK_ICON_SIZE_BUTTON);
+#else
   image = gtk_image_new_from_stock (GTK_STOCK_ABOUT, GTK_ICON_SIZE_BUTTON);
+#endif
   gtk_button_set_image (GTK_BUTTON (button), image);
   gtk_widget_set_no_show_all (button, TRUE);
   gtk_box_pack_end (GTK_BOX (gtk_dialog_get_action_area (GTK_DIALOG (about))),
@@ -556,7 +578,7 @@ mate_about_dialog_init (MateAboutDialog *about)
   priv->credits_dialog = NULL;
 
   /* Add the license button */
-  button = gtk_button_new_from_stock (_("_License"));
+  button = gtk_button_new_with_label (_("_License"));
   gtk_widget_set_can_default (button, TRUE);
   gtk_widget_set_no_show_all (button, TRUE);
   gtk_box_pack_end (GTK_BOX (gtk_dialog_get_action_area (GTK_DIALOG (about))),
@@ -1553,6 +1575,7 @@ mate_about_dialog_get_logo (MateAboutDialog *about)
     return NULL;
 }
 
+#if !GTK_CHECK_VERSION (3, 10, 0)
 static GtkIconSet *
 icon_set_new_from_pixbufs (GList *pixbufs)
 {
@@ -1570,6 +1593,7 @@ icon_set_new_from_pixbufs (GList *pixbufs)
 
   return icon_set;
 }
+#endif
 
 /**
  * mate_about_dialog_set_logo:
@@ -1601,6 +1625,12 @@ mate_about_dialog_set_logo (MateAboutDialog *about,
     gtk_image_set_from_pixbuf (GTK_IMAGE (priv->logo_image), logo);
   else
     {
+#if GTK_CHECK_VERSION (3, 10, 0)
+      const char * icon_name = gtk_window_get_default_icon_name();
+      if (icon_name) {
+        gtk_image_set_from_icon_name(GTK_IMAGE (priv->logo_image), icon_name, GTK_ICON_SIZE_DIALOG);
+      }
+#else
       GList *pixbufs = gtk_window_get_default_icon_list ();
 
       if (pixbufs != NULL)
@@ -1613,6 +1643,7 @@ mate_about_dialog_set_logo (MateAboutDialog *about,
           gtk_icon_set_unref (icon_set);
           g_list_free (pixbufs);
         }
+#endif
     }
 
   g_object_notify (G_OBJECT (about), "logo");
@@ -1730,7 +1761,9 @@ follow_if_link (MateAboutDialog *about,
           GdkColor *style_visited_link_color;
           GdkColor color;
 
+#if !GTK_CHECK_VERSION (3, 0, 0)
           gtk_widget_ensure_style (GTK_WIDGET (about));
+#endif
           gtk_widget_style_get (GTK_WIDGET (about),
                                 "visited-link-color", &style_visited_link_color,
                                 NULL);
@@ -1909,7 +1942,9 @@ text_view_new (MateAboutDialog  *about,
   GdkColor visited_link_color;
   MateAboutDialogPrivate *priv = (MateAboutDialogPrivate *)about->private_data;
 
+#if !GTK_CHECK_VERSION (3, 0, 0)
   gtk_widget_ensure_style (GTK_WIDGET (about));
+#endif
   gtk_widget_style_get (GTK_WIDGET (about),
                         "link-color", &style_link_color,
                         "visited-link-color", &style_visited_link_color,
@@ -2086,12 +2121,18 @@ display_credits_dialog (GtkWidget *button,
   dialog = gtk_dialog_new_with_buttons (_("Credits"),
                                         GTK_WINDOW (about),
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+#if GTK_CHECK_VERSION (3, 10, 0)
+                                        _("_Close"), GTK_RESPONSE_CANCEL,
+#else
                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CANCEL,
+#endif
                                         NULL);
   credits_dialog = GTK_DIALOG (dialog);
   gtk_container_set_border_width (GTK_CONTAINER (credits_dialog), 5);
   gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_content_area (credits_dialog)), 2); /* 2 * 5 + 2 = 12 */
+#if !GTK_CHECK_VERSION (3, 12, 0)
   gtk_container_set_border_width (GTK_CONTAINER (gtk_dialog_get_action_area (credits_dialog)), 5);
+#endif
 
   priv->credits_dialog = dialog;
   gtk_window_set_default_size (GTK_WINDOW (dialog), 500, 300);
@@ -2162,12 +2203,18 @@ display_license_dialog (GtkWidget *button,
   dialog = gtk_dialog_new_with_buttons (_("License"),
                                         GTK_WINDOW (about),
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+#if GTK_CHECK_VERSION (3, 10, 0)
+                                        _("_Close"), GTK_RESPONSE_CANCEL,
+#else
                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CANCEL,
+#endif
                                         NULL);
   licence_dialog = GTK_DIALOG (dialog);
   gtk_container_set_border_width (GTK_CONTAINER (licence_dialog), 5);
   gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_content_area (licence_dialog)), 2); /* 2 * 5 + 2 = 12 */
+#if !GTK_CHECK_VERSION (3, 12, 0)
   gtk_container_set_border_width (GTK_CONTAINER (gtk_dialog_get_action_area (licence_dialog)), 5);
+#endif
 
   priv->license_dialog = dialog;
   gtk_window_set_default_size (GTK_WINDOW (dialog), 420, 320);

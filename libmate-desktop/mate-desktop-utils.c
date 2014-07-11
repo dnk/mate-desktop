@@ -201,6 +201,7 @@ mate_gdk_spawn_command_line_on_screen (GdkScreen *screen, const gchar *command, 
 #else
 		/* Deprecated in GDK 3.0 */
 		context = gdk_app_launch_context_new ();
+#endif
 		gdk_app_launch_context_set_screen (context, screen);
 #endif
 		res = g_app_info_launch (appinfo, NULL, G_APP_LAUNCH_CONTEXT (context), error);
