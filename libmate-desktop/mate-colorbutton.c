@@ -147,7 +147,7 @@ mate_color_button_class_init (MateColorButtonClass *klass)
    * checkerboard background to show its opacity and the opacity slider is displayed in the 
    * color selection dialog. 
    *
-   * Since: 2.4
+   * Since: 1.9.1
    */
   g_object_class_install_property (gobject_class,
                                    PROP_USE_ALPHA,
@@ -161,7 +161,7 @@ mate_color_button_class_init (MateColorButtonClass *klass)
    *
    * The title of the color selection dialog
    *
-   * Since: 2.4
+   * Since: 1.9.1
    */
   g_object_class_install_property (gobject_class,
                                    PROP_TITLE,
@@ -176,7 +176,7 @@ mate_color_button_class_init (MateColorButtonClass *klass)
    *
    * The selected color.
    *
-   * Since: 2.4
+   * Since: 1.9.1
    */
   g_object_class_install_property (gobject_class,
                                    PROP_COLOR,
@@ -191,7 +191,7 @@ mate_color_button_class_init (MateColorButtonClass *klass)
    *
    * The selected opacity value (0 fully transparent, 65535 fully opaque). 
    *
-   * Since: 2.4
+   * Since: 1.9.1
    */
   g_object_class_install_property (gobject_class,
                                    PROP_ALPHA,
@@ -213,7 +213,7 @@ mate_color_button_class_init (MateColorButtonClass *klass)
    * changes the color. If you need to react to programmatic color changes
    * as well, use the notify::color signal.
    *
-   * Since: 2.4
+   * Since: 1.9.1
    */
   color_button_signals[COLOR_SET] = g_signal_new ("color-set",
 						  G_TYPE_FROM_CLASS (gobject_class),
@@ -523,7 +523,7 @@ mate_color_button_finalize (GObject *object)
  *
  * Returns: a new color button.
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 GtkWidget *
 mate_color_button_new (void)
@@ -539,7 +539,7 @@ mate_color_button_new (void)
  *
  * Returns: a new color button.
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 GtkWidget *
 mate_color_button_new_with_color (const GdkColor *color)
@@ -630,6 +630,8 @@ mate_color_button_clicked (GtkButton *button)
 
   mate_color_selection_set_has_opacity_control (MATE_COLOR_SELECTION (color_dialog->colorsel),
                                                color_button->priv->use_alpha);
+
+  mate_color_selection_set_has_palette (MATE_COLOR_SELECTION (color_dialog->colorsel), TRUE);
   
   mate_color_selection_set_previous_color (MATE_COLOR_SELECTION (color_dialog->colorsel), 
 					  &color_button->priv->color);
@@ -651,7 +653,7 @@ mate_color_button_clicked (GtkButton *button)
  *
  * Sets the current color to be @color.
  *
- * Since: 2.4
+ * Since: 1.9.1
  **/
 void
 mate_color_button_set_color (MateColorButton *color_button,
@@ -669,6 +671,32 @@ mate_color_button_set_color (MateColorButton *color_button,
   g_object_notify (G_OBJECT (color_button), "color");
 }
 
+#if GTK_CHECK_VERSION(3, 0, 0)
+/**
+ * mate_color_button_set_rgba:
+ * @color_button: a #MateColorButton.
+ * @color: A #GdkRGBA to set the current color with.
+ *
+ * Sets the current color to be @color.
+ *
+ * Since: 1.9.1
+ **/
+void
+mate_color_button_set_rgba (MateColorButton *color_button,
+			    const GdkRGBA *color)
+{
+  g_return_if_fail (MATE_IS_COLOR_BUTTON (color_button));
+  g_return_if_fail (color != NULL);
+
+  color_button->priv->color.red = color->red * 65535;
+  color_button->priv->color.green = color->green * 65535;
+  color_button->priv->color.blue = color->blue * 65535;
+
+  gtk_widget_queue_draw (color_button->priv->draw_area);
+  
+  g_object_notify (G_OBJECT (color_button), "color");
+}
+#endif
 
 /**
  * mate_color_button_set_alpha:
@@ -677,7 +705,7 @@ mate_color_button_set_color (MateColorButton *color_button,
  *
  * Sets the current opacity to be @alpha. 
  *
- * Since: 2.4
+ * Since: 1.9.1
  **/
 void
 mate_color_button_set_alpha (MateColorButton *color_button,
@@ -699,7 +727,7 @@ mate_color_button_set_alpha (MateColorButton *color_button,
  *
  * Sets @color to be the current color in the #MateColorButton widget.
  *
- * Since: 2.4
+ * Since: 1.9.1
  **/
 void
 mate_color_button_get_color (MateColorButton *color_button,
@@ -712,6 +740,28 @@ mate_color_button_get_color (MateColorButton *color_button,
   color->blue = color_button->priv->color.blue;
 }
 
+#if GTK_CHECK_VERSION(3, 0, 0)
+/**
+ * mate_color_button_get_rgba:
+ * @color_button: a #MateColorButton.
+ * @color: a #GdkRGBA to fill in with the current color.
+ *
+ * Sets @color to be the current color in the #MateColorButton widget.
+ *
+ * Since: 1.9.1
+ **/
+void
+mate_color_button_get_rgba (MateColorButton *color_button,
+			                      GdkRGBA         *color)
+{
+  g_return_if_fail (MATE_IS_COLOR_BUTTON (color_button));
+  
+  color->red = color_button->priv->color.red / 65535.;
+  color->green = color_button->priv->color.green / 65535.;
+  color->blue = color_button->priv->color.blue / 65535.;
+}
+#endif
+
 /**
  * mate_color_button_get_alpha:
  * @color_button: a #MateColorButton.
@@ -720,7 +770,7 @@ mate_color_button_get_color (MateColorButton *color_button,
  *
  * Return value: an integer between 0 and 65535.
  *
- * Since: 2.4
+ * Since: 1.9.1
  **/
 guint16
 mate_color_button_get_alpha (MateColorButton *color_button)
@@ -737,7 +787,7 @@ mate_color_button_get_alpha (MateColorButton *color_button)
  *
  * Sets whether or not the color button should use the alpha channel.
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 void
 mate_color_button_set_use_alpha (MateColorButton *color_button, 
@@ -765,7 +815,7 @@ mate_color_button_set_use_alpha (MateColorButton *color_button,
  *
  * Returns: %TRUE if the color sample uses alpha channel, %FALSE if not.
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 gboolean
 mate_color_button_get_use_alpha (MateColorButton *color_button)
@@ -783,7 +833,7 @@ mate_color_button_get_use_alpha (MateColorButton *color_button)
  *
  * Sets the title for the color selection dialog.
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 void
 mate_color_button_set_title (MateColorButton *color_button, 
@@ -812,7 +862,7 @@ mate_color_button_set_title (MateColorButton *color_button,
  *
  * Returns: An internal string, do not free the return value
  *
- * Since: 2.4
+ * Since: 1.9.1
  */
 const gchar *
 mate_color_button_get_title (MateColorButton *color_button)
