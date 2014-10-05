@@ -1913,7 +1913,13 @@ text_view_visibility_notify_event (GtkWidget          *text_view,
 {
   gint wx, wy, bx, by;
 
+#if GTK_CHECK_VERSION (3, 0, 0)
+  GdkDeviceManager *device_manager = gdk_display_get_device_manager (gtk_widget_get_display(text_view));
+  GdkDevice *device = gdk_device_manager_get_client_pointer (device_manager);
+  gdk_device_get_position (device, NULL, &wx, &wy);
+#else
   gdk_window_get_pointer (gtk_widget_get_window (text_view), &wx, &wy, NULL);
+#endif
 
   gtk_text_view_window_to_buffer_coords (GTK_TEXT_VIEW (text_view),
                                          GTK_TEXT_WINDOW_WIDGET,
