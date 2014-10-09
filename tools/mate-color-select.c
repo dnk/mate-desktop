@@ -39,12 +39,14 @@ copy_color (GtkWidget *widget, GdkEvent  *event, MateColorSelectionDialog *color
     GdkColor color;
     gchar *color_string;
 
-    mate_color_selection_get_current_color (color_dialog->colorsel, &color);
+    mate_color_selection_get_current_color (MATE_COLOR_SELECTION(color_dialog->colorsel), &color);
     g_object_get (color_dialog->colorsel, "hex-string", &color_string, NULL);
 
     gtk_clipboard_set_text (gtk_clipboard_get (GDK_SELECTION_CLIPBOARD), color_string, -1);
 
     g_free (color_string);
+
+    return FALSE;
 }
 
 int
@@ -58,24 +60,19 @@ main (int argc, char **argv)
     /* initialize GTK+ */
     gtk_init (&argc, &argv);
 
-#if GTK_CHECK_VERSION (3, 12, 0)
-    color_dialog = mate_color_selection_dialog_new_with_header_bar (_("MATE Color Selection"));
-    gtk_header_bar_set_show_close_button (GTK_HEADER_BAR(gtk_dialog_get_header_bar (GTK_DIALOG (color_dialog))), TRUE);
-#else
     color_dialog = mate_color_selection_dialog_new (_("MATE Color Selection"));
-#endif
 
-    mate_color_selection_set_has_palette (MATE_COLOR_SELECTION_DIALOG (color_dialog)->colorsel, TRUE);
+    mate_color_selection_set_has_palette (MATE_COLOR_SELECTION(MATE_COLOR_SELECTION_DIALOG (color_dialog)->colorsel), TRUE);
 
     /* quit signal */
     g_signal_connect (color_dialog, "destroy", gtk_main_quit, NULL);
 
     widget = gtk_button_new_from_stock (GTK_STOCK_COPY);
-    gtk_container_add (gtk_dialog_get_action_area (GTK_DIALOG (color_dialog)), widget);
-    g_signal_connect (widget, "button-release-event", copy_color, color_dialog);
+    gtk_container_add (GTK_CONTAINER(gtk_dialog_get_action_area (GTK_DIALOG (color_dialog))), widget);
+    g_signal_connect (widget, "button-release-event", G_CALLBACK(copy_color), color_dialog);
 
     widget = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
-    gtk_container_add (gtk_dialog_get_action_area (GTK_DIALOG (color_dialog)), widget);
+    gtk_container_add (GTK_CONTAINER(gtk_dialog_get_action_area (GTK_DIALOG (color_dialog))), widget);
     g_signal_connect (widget, "button-release-event", gtk_main_quit, NULL);
 
     gtk_widget_show_all (color_dialog);
@@ -85,4 +82,5 @@ main (int argc, char **argv)
 
     /* start application */
     gtk_main ();
+    return 0;
 }
