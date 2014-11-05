@@ -252,6 +252,7 @@ make_palette (MateRRLabeler *labeler)
 		labeler->palette[i].red   = r;
 		labeler->palette[i].green = g;
 		labeler->palette[i].blue  = b;
+		labeler->palette[i].alpha  = 1.0;
 #else
 		labeler->palette[i].red   = (int) (65535 * r + 0.5);
 		labeler->palette[i].green = (int) (65535 * g + 0.5);
