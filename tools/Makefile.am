@@ -1,5 +1,5 @@
 bin_PROGRAMS = mate-color-select
-bin_SCRIPTS = mate-gsettings-toggle
+bin_SCRIPTS =
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)
@@ -39,7 +39,6 @@ endif
 EXTRA_DIST = \
 	mate-conf-import.desktop.in.in \
 	mate-conf-import \
-	mate-gsettings-toggle \
 	mpaste
 
 CLEANFILES = *.desktop *.desktop.in
