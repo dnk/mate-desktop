@@ -1,6 +1,8 @@
 /* mate-rr-config.c
+ * -*- c-basic-offset: 4 -*-
  *
  * Copyright 2007, 2008, Red Hat, Inc.
+ * Copyright 2010 Giovanni Campagna
  * 
  * This file is part of the Mate Library.
  * 
@@ -34,7 +36,6 @@
 #include <X11/Xlib.h>
 #include <gdk/gdkx.h>
 
-#undef MATE_DISABLE_DEPRECATED
 #include "mate-rr-config.h"
 
 #include "edid.h"
@@ -79,12 +80,18 @@ typedef struct CrtcAssignment CrtcAssignment;
 static gboolean         crtc_assignment_apply (CrtcAssignment   *assign,
 					       guint32           timestamp,
 					       GError          **error);
-static CrtcAssignment  *crtc_assignment_new   (MateRRScreen    *screen,
-					       MateOutputInfo **outputs,
-					       GError          **error);
+static CrtcAssignment  *crtc_assignment_new   (MateRRScreen      *screen,
+					       MateRROutputInfo **outputs,
+					       GError            **error);
 static void             crtc_assignment_free  (CrtcAssignment   *assign);
-static void             output_free           (MateOutputInfo  *output);
-static MateOutputInfo *output_copy           (MateOutputInfo  *output);
+
+enum {
+  PROP_0,
+  PROP_SCREEN,
+  PROP_LAST
+};
+
+G_DEFINE_TYPE (MateRRConfig, mate_rr_config, G_TYPE_OBJECT)
 
 typedef struct Parser Parser;
 
@@ -92,7 +99,7 @@ typedef struct Parser Parser;
 struct Parser
 {
     int			config_file_version;
-    MateOutputInfo *	output;
+    MateRROutputInfo *	output;
     MateRRConfig *	configuration;
     GPtrArray *		outputs;
     GPtrArray *		configurations;
@@ -131,6 +138,8 @@ stack_is (Parser *parser,
 	stack = g_list_prepend (stack, (gpointer)s);
 	s = va_arg (args, const char *);
     }
+
+    va_end (args);
 	
     l1 = stack;
     l2 = parser->stack->head;
@@ -167,38 +176,38 @@ handle_start_element (GMarkupParseContext *context,
 	int i;
 	g_assert (parser->output == NULL);
 
-	parser->output = g_new0 (MateOutputInfo, 1);
-	parser->output->rotation = 0;
+	parser->output = g_object_new (MATE_TYPE_RR_OUTPUT_INFO, NULL);
+	parser->output->priv->rotation = 0;
 	
 	for (i = 0; attr_names[i] != NULL; ++i)
 	{
 	    if (strcmp (attr_names[i], "name") == 0)
 	    {
-		parser->output->name = g_strdup (attr_values[i]);
+		parser->output->priv->name = g_strdup (attr_values[i]);
 		break;
 	    }
 	}
 
-	if (!parser->output->name)
+	if (!parser->output->priv->name)
 	{
 	    /* This really shouldn't happen, but it's better to make
 	     * something up than to crash later.
 	     */
 	    g_warning ("Malformed monitor configuration file");
 	    
-	    parser->output->name = g_strdup ("default");
+	    parser->output->priv->name = g_strdup ("default");
 	}	
-	parser->output->connected = FALSE;
-	parser->output->on = FALSE;
-	parser->output->primary = FALSE;
+	parser->output->priv->connected = FALSE;
+	parser->output->priv->on = FALSE;
+	parser->output->priv->primary = FALSE;
     }
     else if (strcmp (name, "configuration") == 0)
     {
 	g_assert (parser->configuration == NULL);
 	
-	parser->configuration = g_new0 (MateRRConfig, 1);
-	parser->configuration->clone = FALSE;
-	parser->configuration->outputs = NULL;
+	parser->configuration = g_object_new (MATE_TYPE_RR_CONFIG, NULL);
+	parser->configuration->priv->clone = FALSE;
+	parser->configuration->priv->outputs = NULL;
     }
     else if (strcmp (name, "monitors") == 0)
     {
@@ -228,8 +237,8 @@ handle_end_element (GMarkupParseContext *context,
     if (strcmp (name, "output") == 0)
     {
 	/* If no rotation properties were set, just use MATE_RR_ROTATION_0 */
-	if (parser->output->rotation == 0)
-	    parser->output->rotation = MATE_RR_ROTATION_0;
+	if (parser->output->priv->rotation == 0)
+	    parser->output->priv->rotation = MATE_RR_ROTATION_0;
 	
 	g_ptr_array_add (parser->outputs, parser->output);
 
@@ -238,8 +247,8 @@ handle_end_element (GMarkupParseContext *context,
     else if (strcmp (name, "configuration") == 0)
     {
 	g_ptr_array_add (parser->outputs, NULL);
-	parser->configuration->outputs =
-	    (MateOutputInfo **)g_ptr_array_free (parser->outputs, FALSE);
+	parser->configuration->priv->outputs =
+	    (MateRROutputInfo **)g_ptr_array_free (parser->outputs, FALSE);
 	parser->outputs = g_ptr_array_new ();
 	g_ptr_array_add (parser->configurations, parser->configuration);
 	parser->configuration = NULL;
@@ -261,96 +270,96 @@ handle_text (GMarkupParseContext *context,
     
     if (stack_is (parser, "vendor", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->connected = TRUE;
+	parser->output->priv->connected = TRUE;
 	
-	strncpy (parser->output->vendor, text, 3);
-	parser->output->vendor[3] = 0;
+	strncpy ((gchar*) parser->output->priv->vendor, text, 3);
+	parser->output->priv->vendor[3] = 0;
     }
     else if (stack_is (parser, "clone", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
 	if (strcmp (text, "yes") == 0)
-	    parser->configuration->clone = TRUE;
+	    parser->configuration->priv->clone = TRUE;
     }
     else if (stack_is (parser, "product", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->connected = TRUE;
+	parser->output->priv->connected = TRUE;
 
-	parser->output->product = parse_int (text);
+	parser->output->priv->product = parse_int (text);
     }
     else if (stack_is (parser, "serial", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->connected = TRUE;
+	parser->output->priv->connected = TRUE;
 
-	parser->output->serial = parse_uint (text);
+	parser->output->priv->serial = parse_uint (text);
     }
     else if (stack_is (parser, "width", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->on = TRUE;
+	parser->output->priv->on = TRUE;
 
-	parser->output->width = parse_int (text);
+	parser->output->priv->width = parse_int (text);
     }
     else if (stack_is (parser, "x", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->on = TRUE;
+	parser->output->priv->on = TRUE;
 
-	parser->output->x = parse_int (text);
+	parser->output->priv->x = parse_int (text);
     }
     else if (stack_is (parser, "y", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->on = TRUE;
+	parser->output->priv->on = TRUE;
 
-	parser->output->y = parse_int (text);
+	parser->output->priv->y = parse_int (text);
     }
     else if (stack_is (parser, "height", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->on = TRUE;
+	parser->output->priv->on = TRUE;
 
-	parser->output->height = parse_int (text);
+	parser->output->priv->height = parse_int (text);
     }
     else if (stack_is (parser, "rate", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
-	parser->output->on = TRUE;
+	parser->output->priv->on = TRUE;
 
-	parser->output->rate = parse_int (text);
+	parser->output->priv->rate = parse_int (text);
     }
     else if (stack_is (parser, "rotation", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
 	if (strcmp (text, "normal") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_ROTATION_0;
+	    parser->output->priv->rotation |= MATE_RR_ROTATION_0;
 	}
 	else if (strcmp (text, "left") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_ROTATION_90;
+	    parser->output->priv->rotation |= MATE_RR_ROTATION_90;
 	}
 	else if (strcmp (text, "upside_down") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_ROTATION_180;
+	    parser->output->priv->rotation |= MATE_RR_ROTATION_180;
 	}
 	else if (strcmp (text, "right") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_ROTATION_270;
+	    parser->output->priv->rotation |= MATE_RR_ROTATION_270;
 	}
     }
     else if (stack_is (parser, "reflect_x", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
 	if (strcmp (text, "yes") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_REFLECT_X;
+	    parser->output->priv->rotation |= MATE_RR_REFLECT_X;
 	}
     }
     else if (stack_is (parser, "reflect_y", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
 	if (strcmp (text, "yes") == 0)
 	{
-	    parser->output->rotation |= MATE_RR_REFLECT_Y;
+	    parser->output->priv->rotation |= MATE_RR_REFLECT_Y;
 	}
     }
     else if (stack_is (parser, "primary", "output", "configuration", TOPLEVEL_ELEMENT, NULL))
     {
 	if (strcmp (text, "yes") == 0)
 	{
-	    parser->output->primary = TRUE;
+	    parser->output->priv->primary = TRUE;
 	}
     }
     else
@@ -368,16 +377,16 @@ parser_free (Parser *parser)
     g_assert (parser != NULL);
 
     if (parser->output)
-	output_free (parser->output);
+	g_object_unref (parser->output);
 
     if (parser->configuration)
-	mate_rr_config_free (parser->configuration);
+	g_object_unref (parser->configuration);
 
     for (i = 0; i < parser->outputs->len; ++i)
     {
-	MateOutputInfo *output = parser->outputs->pdata[i];
+	MateRROutputInfo *output = parser->outputs->pdata[i];
 
-	output_free (output);
+	g_object_unref (output);
     }
 
     g_ptr_array_free (parser->outputs, TRUE);
@@ -386,7 +395,7 @@ parser_free (Parser *parser)
     {
 	MateRRConfig *config = parser->configurations->pdata[i];
 
-	mate_rr_config_free (config);
+	g_object_unref (config);
     }
 
     g_ptr_array_free (parser->configurations, TRUE);
@@ -437,42 +446,87 @@ out:
     return result;
 }
 
-MateRRConfig *
-mate_rr_config_new_current (MateRRScreen *screen)
+static void
+mate_rr_config_init (MateRRConfig *self)
 {
-    MateRRConfig *config = g_new0 (MateRRConfig, 1);
-    GPtrArray *a = g_ptr_array_new ();
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, MATE_TYPE_RR_CONFIG, MateRRConfigPrivate);
+
+    self->priv->clone = FALSE;
+    self->priv->screen = NULL;
+    self->priv->outputs = NULL;
+}
+
+static void
+mate_rr_config_set_property (GObject *gobject, guint property_id, const GValue *value, GParamSpec *property)
+{
+    MateRRConfig *self = MATE_RR_CONFIG (gobject);
+
+    switch (property_id) {
+	case PROP_SCREEN:
+	    self->priv->screen = g_value_dup_object (value);
+	    return;
+	default:
+	    G_OBJECT_WARN_INVALID_PROPERTY_ID (gobject, property_id, property);
+    }
+}
+
+static void
+mate_rr_config_finalize (GObject *gobject)
+{
+    MateRRConfig *self = MATE_RR_CONFIG (gobject);
+
+    if (self->priv->screen)
+	g_object_unref (self->priv->screen);
+
+    if (self->priv->outputs) {
+	int i;
+
+        for (i = 0; self->priv->outputs[i] != NULL; i++) {
+	    MateRROutputInfo *output = self->priv->outputs[i];
+	    g_object_unref (output);
+	}
+	g_free (self->priv->outputs);
+    }
+
+    G_OBJECT_CLASS (mate_rr_config_parent_class)->finalize (gobject);
+}
+
+gboolean
+mate_rr_config_load_current (MateRRConfig *config, GError **error)
+{
+    GPtrArray *a;
     MateRROutput **rr_outputs;
     int i;
     int clone_width = -1;
     int clone_height = -1;
     int last_x;
 
-    g_return_val_if_fail (screen != NULL, NULL);
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (config), FALSE);
 
-    rr_outputs = mate_rr_screen_list_outputs (screen);
+    a = g_ptr_array_new ();
+    rr_outputs = mate_rr_screen_list_outputs (config->priv->screen);
 
-    config->clone = FALSE;
+    config->priv->clone = FALSE;
     
     for (i = 0; rr_outputs[i] != NULL; ++i)
     {
 	MateRROutput *rr_output = rr_outputs[i];
-	MateOutputInfo *output = g_new0 (MateOutputInfo, 1);
+	MateRROutputInfo *output = g_object_new (MATE_TYPE_RR_OUTPUT_INFO, NULL);
 	MateRRMode *mode = NULL;
 	const guint8 *edid_data = mate_rr_output_get_edid_data (rr_output);
 	MateRRCrtc *crtc;
 
-	output->name = g_strdup (mate_rr_output_get_name (rr_output));
-	output->connected = mate_rr_output_is_connected (rr_output);
+	output->priv->name = g_strdup (mate_rr_output_get_name (rr_output));
+	output->priv->connected = mate_rr_output_is_connected (rr_output);
 
-	if (!output->connected)
+	if (!output->priv->connected)
 	{
-	    output->x = -1;
-	    output->y = -1;
-	    output->width = -1;
-	    output->height = -1;
-	    output->rate = -1;
-	    output->rotation = MATE_RR_ROTATION_0;
+	    output->priv->x = -1;
+	    output->priv->y = -1;
+	    output->priv->width = -1;
+	    output->priv->height = -1;
+	    output->priv->rate = -1;
+	    output->priv->rotation = MATE_RR_ROTATION_0;
 	}
 	else
 	{
@@ -483,24 +537,24 @@ mate_rr_config_new_current (MateRRScreen *screen)
 
 	    if (info)
 	    {
-		memcpy (output->vendor, info->manufacturer_code,
-			sizeof (output->vendor));
+		memcpy (output->priv->vendor, info->manufacturer_code,
+			sizeof (output->priv->vendor));
 		
-		output->product = info->product_code;
-		output->serial = info->serial_number;
-		output->aspect = info->aspect_ratio;
+		output->priv->product = info->product_code;
+		output->priv->serial = info->serial_number;
+		output->priv->aspect = info->aspect_ratio;
 	    }
 	    else
 	    {
-		strcpy (output->vendor, "???");
-		output->product = 0;
-		output->serial = 0;
+		strcpy (output->priv->vendor, "???");
+		output->priv->product = 0;
+		output->priv->serial = 0;
 	    }
 
 	    if (mate_rr_output_is_laptop (rr_output))
-		output->display_name = g_strdup (_("Laptop"));
+		output->priv->display_name = g_strdup (_("Laptop"));
 	    else
-		output->display_name = make_display_name (info);
+		output->priv->display_name = make_display_name (info);
 		
 	    g_free (info);
 		
@@ -509,28 +563,28 @@ mate_rr_config_new_current (MateRRScreen *screen)
 	    
 	    if (crtc && mode)
 	    {
-		output->on = TRUE;
+		output->priv->on = TRUE;
 		
-		mate_rr_crtc_get_position (crtc, &output->x, &output->y);
-		output->width = mate_rr_mode_get_width (mode);
-		output->height = mate_rr_mode_get_height (mode);
-		output->rate = mate_rr_mode_get_freq (mode);
-		output->rotation = mate_rr_crtc_get_current_rotation (crtc);
+		mate_rr_crtc_get_position (crtc, &output->priv->x, &output->priv->y);
+		output->priv->width = mate_rr_mode_get_width (mode);
+		output->priv->height = mate_rr_mode_get_height (mode);
+		output->priv->rate = mate_rr_mode_get_freq (mode);
+		output->priv->rotation = mate_rr_crtc_get_current_rotation (crtc);
 
-		if (output->x == 0 && output->y == 0) {
+		if (output->priv->x == 0 && output->priv->y == 0) {
 			if (clone_width == -1) {
-				clone_width = output->width;
-				clone_height = output->height;
-			} else if (clone_width == output->width &&
-				   clone_height == output->height) {
-				config->clone = TRUE;
+				clone_width = output->priv->width;
+				clone_height = output->priv->height;
+			} else if (clone_width == output->priv->width &&
+				   clone_height == output->priv->height) {
+				config->priv->clone = TRUE;
 			}
 		}
 	    }
 	    else
 	    {
-		output->on = FALSE;
-		config->clone = FALSE;
+		output->priv->on = FALSE;
+		config->priv->clone = FALSE;
 	    }
 
 	    /* Get preferred size for the monitor */
@@ -556,117 +610,162 @@ mate_rr_config_new_current (MateRRScreen *screen)
 	    
 	    if (mode)
 	    {
-		output->pref_width = mate_rr_mode_get_width (mode);
-		output->pref_height = mate_rr_mode_get_height (mode);
+		output->priv->pref_width = mate_rr_mode_get_width (mode);
+		output->priv->pref_height = mate_rr_mode_get_height (mode);
 	    }
 	    else
 	    {
 		/* Pick some random numbers. This should basically never happen */
-		output->pref_width = 1024;
-		output->pref_height = 768;
+		output->priv->pref_width = 1024;
+		output->priv->pref_height = 768;
 	    }
 	}
 
-        output->primary = mate_rr_output_get_is_primary (rr_output);
+        output->priv->primary = mate_rr_output_get_is_primary (rr_output);
  
 	g_ptr_array_add (a, output);
     }
 
     g_ptr_array_add (a, NULL);
     
-    config->outputs = (MateOutputInfo **)g_ptr_array_free (a, FALSE);
+    config->priv->outputs = (MateRROutputInfo **)g_ptr_array_free (a, FALSE);
 
     /* Walk the outputs computing the right-most edge of all
      * lit-up displays
      */
     last_x = 0;
-    for (i = 0; config->outputs[i] != NULL; ++i)
+    for (i = 0; config->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *output = config->outputs[i];
+	MateRROutputInfo *output = config->priv->outputs[i];
 
-	if (output->on)
+	if (output->priv->on)
 	{
-	    last_x = MAX (last_x, output->x + output->width);
+	    last_x = MAX (last_x, output->priv->x + output->priv->width);
 	}
     }
 
     /* Now position all off displays to the right of the
      * on displays
      */
-    for (i = 0; config->outputs[i] != NULL; ++i)
+    for (i = 0; config->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *output = config->outputs[i];
+	MateRROutputInfo *output = config->priv->outputs[i];
 
-	if (output->connected && !output->on)
+	if (output->priv->connected && !output->priv->on)
 	{
-	    output->x = last_x;
-	    last_x = output->x + output->width;
+	    output->priv->x = last_x;
+	    last_x = output->priv->x + output->priv->width;
 	}
     }
     
     g_assert (mate_rr_config_match (config, config));
-    
-    return config;
+
+    return TRUE;
+}
+
+gboolean
+mate_rr_config_load_filename (MateRRConfig *result, const char *filename, GError **error)
+{
+    MateRRConfig *current;
+    MateRRConfig **configs;
+    gboolean found = FALSE;
+
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (result), FALSE);
+    g_return_val_if_fail (filename != NULL, FALSE);
+    g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+    if (filename == NULL)
+      filename = mate_rr_config_get_intended_filename ();
+
+    current = mate_rr_config_new_current (result->priv->screen, error);
+
+    configs = configurations_read_from_file (filename, error);
+
+    if (configs)
+    {
+	int i;
+
+	for (i = 0; configs[i] != NULL; ++i)
+	{
+	    if (mate_rr_config_match (configs[i], current))
+	    {
+		int j;
+		GPtrArray *array;
+		result->priv->clone = configs[i]->priv->clone;
+
+		array = g_ptr_array_new ();
+		for (j = 0; configs[i]->priv->outputs[j] != NULL; j++) {
+		    g_object_ref (configs[i]->priv->outputs[j]);
+		    g_ptr_array_add (array, configs[i]->priv->outputs[j]);
+		}
+		g_ptr_array_add (array, NULL);
+		result->priv->outputs = (MateRROutputInfo **) g_ptr_array_free (array, FALSE);
+
+		found = TRUE;
+		break;
+	    }
+	    g_object_unref (configs[i]);
+	}
+	g_free (configs);
+
+	if (!found)
+	    g_set_error (error, MATE_RR_ERROR, MATE_RR_ERROR_NO_MATCHING_CONFIG,
+			 _("none of the saved display configurations matched the active configuration"));
+    }
+
+    g_object_unref (current);
+    return found;
 }
 
 static void
-output_free (MateOutputInfo *output)
+mate_rr_config_class_init (MateRRConfigClass *klass)
 {
-    if (output->display_name)
-	g_free (output->display_name);
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-    if (output->name)
-	g_free (output->name);
-    
-    g_free (output);
+    g_type_class_add_private (klass, sizeof (MateRROutputInfoPrivate));
+
+    gobject_class->set_property = mate_rr_config_set_property;
+    gobject_class->finalize = mate_rr_config_finalize;
+
+    g_object_class_install_property (gobject_class, PROP_SCREEN,
+				     g_param_spec_object ("screen", "Screen", "The MateRRScreen this config applies to", MATE_TYPE_RR_SCREEN,
+							  G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB));
 }
 
-static MateOutputInfo *
-output_copy (MateOutputInfo *output)
+MateRRConfig *
+mate_rr_config_new_current (MateRRScreen *screen, GError **error)
 {
-    MateOutputInfo *copy = g_new0 (MateOutputInfo, 1);
+    MateRRConfig *self = g_object_new (MATE_TYPE_RR_CONFIG, "screen", screen, NULL);
 
-    *copy = *output;
-
-    copy->name = g_strdup (output->name);
-    copy->display_name = g_strdup (output->display_name);
-
-    return copy;
+    if (mate_rr_config_load_current (self, error))
+      return self;
+    else
+      {
+	g_object_unref (self);
+	return NULL;
+      }
 }
 
-static void
-outputs_free (MateOutputInfo **outputs)
+MateRRConfig *
+mate_rr_config_new_stored (MateRRScreen *screen, GError **error)
 {
-    int i;
+    MateRRConfig *self = g_object_new (MATE_TYPE_RR_CONFIG, "screen", screen, NULL);
+    char *filename;
+    gboolean success;
 
-    g_assert (outputs != NULL);
+    filename = mate_rr_config_get_intended_filename ();
 
-    for (i = 0; outputs[i] != NULL; ++i)
-	output_free (outputs[i]);
+    success = mate_rr_config_load_filename (self, filename, error);
 
-    g_free (outputs);
-}
+    g_free (filename);
 
-void
-mate_rr_config_free (MateRRConfig *config)
-{
-    g_return_if_fail (config != NULL);
-    outputs_free (config->outputs);
-    
-    g_free (config);
-}
-
-static void
-configurations_free (MateRRConfig **configurations)
-{
-    int i;
-
-    g_assert (configurations != NULL);
-
-    for (i = 0; configurations[i] != NULL; ++i)
-	mate_rr_config_free (configurations[i]);
-
-    g_free (configurations);
+    if (success)
+      return self;
+    else
+      {
+	g_object_unref (self);
+	return NULL;
+      }
 }
 
 static gboolean
@@ -711,75 +810,75 @@ out:
 }
 
 static gboolean
-output_match (MateOutputInfo *output1, MateOutputInfo *output2)
+output_match (MateRROutputInfo *output1, MateRROutputInfo *output2)
 {
-    g_assert (output1 != NULL);
-    g_assert (output2 != NULL);
+    g_assert (MATE_IS_RR_OUTPUT_INFO (output1));
+    g_assert (MATE_IS_RR_OUTPUT_INFO (output2));
 
-    if (strcmp (output1->name, output2->name) != 0)
+    if (strcmp (output1->priv->name, output2->priv->name) != 0)
 	return FALSE;
 
-    if (strcmp (output1->vendor, output2->vendor) != 0)
+    if (strcmp (output1->priv->vendor, output2->priv->vendor) != 0)
 	return FALSE;
 
-    if (output1->product != output2->product)
+    if (output1->priv->product != output2->priv->product)
 	return FALSE;
 
-    if (output1->serial != output2->serial)
+    if (output1->priv->serial != output2->priv->serial)
 	return FALSE;
 
-    if (output1->connected != output2->connected)
+    if (output1->priv->connected != output2->priv->connected)
 	return FALSE;
     
     return TRUE;
 }
 
 static gboolean
-output_equal (MateOutputInfo *output1, MateOutputInfo *output2)
+output_equal (MateRROutputInfo *output1, MateRROutputInfo *output2)
 {
-    g_assert (output1 != NULL);
-    g_assert (output2 != NULL);
+    g_assert (MATE_IS_RR_OUTPUT_INFO (output1));
+    g_assert (MATE_IS_RR_OUTPUT_INFO (output2));
 
     if (!output_match (output1, output2))
 	return FALSE;
 
-    if (output1->on != output2->on)
+    if (output1->priv->on != output2->priv->on)
 	return FALSE;
 
-    if (output1->on)
+    if (output1->priv->on)
     {
-	if (output1->width != output2->width)
+	if (output1->priv->width != output2->priv->width)
 	    return FALSE;
 	
-	if (output1->height != output2->height)
+	if (output1->priv->height != output2->priv->height)
 	    return FALSE;
 	
-	if (output1->rate != output2->rate)
+	if (output1->priv->rate != output2->priv->rate)
 	    return FALSE;
 	
-	if (output1->x != output2->x)
+	if (output1->priv->x != output2->priv->x)
 	    return FALSE;
 	
-	if (output1->y != output2->y)
+	if (output1->priv->y != output2->priv->y)
 	    return FALSE;
 	
-	if (output1->rotation != output2->rotation)
+	if (output1->priv->rotation != output2->priv->rotation)
 	    return FALSE;
     }
 
     return TRUE;
 }
 
-static MateOutputInfo *
+static MateRROutputInfo *
 find_output (MateRRConfig *config, const char *name)
 {
     int i;
 
-    for (i = 0; config->outputs[i] != NULL; ++i)
+    for (i = 0; config->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *output = config->outputs[i];
+	MateRROutputInfo *output = config->priv->outputs[i];
 	
-	if (strcmp (name, output->name) == 0)
+	if (strcmp (name, output->priv->name) == 0)
 	    return output;
     }
 
@@ -793,13 +892,15 @@ gboolean
 mate_rr_config_match (MateRRConfig *c1, MateRRConfig *c2)
 {
     int i;
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (c1), FALSE);
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (c2), FALSE);
 
-    for (i = 0; c1->outputs[i] != NULL; ++i)
+    for (i = 0; c1->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *output1 = c1->outputs[i];
-	MateOutputInfo *output2;
+	MateRROutputInfo *output1 = c1->priv->outputs[i];
+	MateRROutputInfo *output2;
 
-	output2 = find_output (c2, output1->name);
+	output2 = find_output (c2, output1->priv->name);
 	if (!output2 || !output_match (output1, output2))
 	    return FALSE;
     }
@@ -815,13 +916,15 @@ mate_rr_config_equal (MateRRConfig  *c1,
 		       MateRRConfig  *c2)
 {
     int i;
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (c1), FALSE);
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (c2), FALSE);
 
-    for (i = 0; c1->outputs[i] != NULL; ++i)
+    for (i = 0; c1->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *output1 = c1->outputs[i];
-	MateOutputInfo *output2;
+	MateRROutputInfo *output1 = c1->priv->outputs[i];
+	MateRROutputInfo *output2;
 
-	output2 = find_output (c2, output1->name);
+	output2 = find_output (c2, output1->priv->name);
 	if (!output2 || !output_equal (output1, output2))
 	    return FALSE;
     }
@@ -829,34 +932,39 @@ mate_rr_config_equal (MateRRConfig  *c1,
     return TRUE;
 }
 
-static MateOutputInfo **
+static MateRROutputInfo **
 make_outputs (MateRRConfig *config)
 {
     GPtrArray *outputs;
-    MateOutputInfo *first_on;
+    MateRROutputInfo *first_on;
     int i;
 
     outputs = g_ptr_array_new ();
 
     first_on = NULL;
     
-    for (i = 0; config->outputs[i] != NULL; ++i)
+    for (i = 0; config->priv->outputs[i] != NULL; ++i)
     {
-	MateOutputInfo *old = config->outputs[i];
-	MateOutputInfo *new = output_copy (old);
+	MateRROutputInfo *old = config->priv->outputs[i];
+	MateRROutputInfo *new = g_object_new (MATE_TYPE_RR_OUTPUT_INFO, NULL);
+	*(new->priv) = *(old->priv);
+	if (old->priv->name)
+	    new->priv->name = g_strdup (old->priv->name);
+	if (old->priv->display_name)
+	    new->priv->display_name = g_strdup (old->priv->display_name);
 
-	if (old->on && !first_on)
+	if (old->priv->on && !first_on)
 	    first_on = old;
 	
-	if (config->clone && new->on)
+	if (config->priv->clone && new->priv->on)
 	{
 	    g_assert (first_on);
 
-	    new->width = first_on->width;
-	    new->height = first_on->height;
-	    new->rotation = first_on->rotation;
-	    new->x = 0;
-	    new->y = 0;
+	    new->priv->width = first_on->priv->width;
+	    new->priv->height = first_on->priv->height;
+	    new->priv->rotation = first_on->priv->rotation;
+	    new->priv->x = 0;
+	    new->priv->y = 0;
 	}
 
 	g_ptr_array_add (outputs, new);
@@ -864,7 +972,7 @@ make_outputs (MateRRConfig *config)
 
     g_ptr_array_add (outputs, NULL);
 
-    return (MateOutputInfo **)g_ptr_array_free (outputs, FALSE);
+    return (MateRROutputInfo **)g_ptr_array_free (outputs, FALSE);
 }
 
 gboolean
@@ -872,11 +980,13 @@ mate_rr_config_applicable (MateRRConfig  *configuration,
 			    MateRRScreen  *screen,
 			    GError        **error)
 {
-    MateOutputInfo **outputs;
+    MateRROutputInfo **outputs;
     CrtcAssignment *assign;
     gboolean result;
+    int i;
 
-    g_return_val_if_fail (configuration != NULL, FALSE);
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (configuration), FALSE);
+    g_return_val_if_fail (MATE_IS_RR_SCREEN (screen), FALSE);
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
     outputs = make_outputs (configuration);
@@ -892,7 +1002,9 @@ mate_rr_config_applicable (MateRRConfig  *configuration,
 	result = FALSE;
     }
 
-    outputs_free (outputs);
+    for (i = 0; outputs[i] != NULL; i++) {
+	 g_object_unref (outputs[i]);
+    }
 
     return result;
 }
@@ -960,46 +1072,46 @@ emit_configuration (MateRRConfig *config,
 
     g_string_append_printf (string, "  <configuration>\n");
 
-    g_string_append_printf (string, "      <clone>%s</clone>\n", yes_no (config->clone));
+    g_string_append_printf (string, "      <clone>%s</clone>\n", yes_no (config->priv->clone));
     
-    for (j = 0; config->outputs[j] != NULL; ++j)
+    for (j = 0; config->priv->outputs[j] != NULL; ++j)
     {
-	MateOutputInfo *output = config->outputs[j];
+	MateRROutputInfo *output = config->priv->outputs[j];
 	
 	g_string_append_printf (
-	    string, "      <output name=\"%s\">\n", output->name);
+	    string, "      <output name=\"%s\">\n", output->priv->name);
 	
-	if (output->connected && *output->vendor != '\0')
+	if (output->priv->connected && *output->priv->vendor != '\0')
 	{
 	    g_string_append_printf (
-		string, "          <vendor>%s</vendor>\n", output->vendor);
+		string, "          <vendor>%s</vendor>\n", output->priv->vendor);
 	    g_string_append_printf (
-		string, "          <product>0x%04x</product>\n", output->product);
+		string, "          <product>0x%04x</product>\n", output->priv->product);
 	    g_string_append_printf (
-		string, "          <serial>0x%08x</serial>\n", output->serial);
+		string, "          <serial>0x%08x</serial>\n", output->priv->serial);
 	}
 	
 	/* An unconnected output which is on does not make sense */
-	if (output->connected && output->on)
+	if (output->priv->connected && output->priv->on)
 	{
 	    g_string_append_printf (
-		string, "          <width>%d</width>\n", output->width);
+		string, "          <width>%d</width>\n", output->priv->width);
 	    g_string_append_printf (
-		string, "          <height>%d</height>\n", output->height);
+		string, "          <height>%d</height>\n", output->priv->height);
 	    g_string_append_printf (
-		string, "          <rate>%d</rate>\n", output->rate);
+		string, "          <rate>%d</rate>\n", output->priv->rate);
 	    g_string_append_printf (
-		string, "          <x>%d</x>\n", output->x);
+		string, "          <x>%d</x>\n", output->priv->x);
 	    g_string_append_printf (
-		string, "          <y>%d</y>\n", output->y);
+		string, "          <y>%d</y>\n", output->priv->y);
 	    g_string_append_printf (
-		string, "          <rotation>%s</rotation>\n", get_rotation_name (output->rotation));
+		string, "          <rotation>%s</rotation>\n", get_rotation_name (output->priv->rotation));
 	    g_string_append_printf (
-		string, "          <reflect_x>%s</reflect_x>\n", get_reflect_x (output->rotation));
+		string, "          <reflect_x>%s</reflect_x>\n", get_reflect_x (output->priv->rotation));
 	    g_string_append_printf (
-		string, "          <reflect_y>%s</reflect_y>\n", get_reflect_y (output->rotation));
+		string, "          <reflect_y>%s</reflect_y>\n", get_reflect_y (output->priv->rotation));
             g_string_append_printf (
-                string, "          <primary>%s</primary>\n", yes_no (output->primary));
+                string, "          <primary>%s</primary>\n", yes_no (output->priv->primary));
 	}
 	
 	g_string_append_printf (string, "      </output>\n");
@@ -1019,37 +1131,37 @@ mate_rr_config_sanitize (MateRRConfig *config)
      * make sure the configuration starts at (0, 0)
      */
     x_offset = y_offset = G_MAXINT;
-    for (i = 0; config->outputs[i]; ++i)
+    for (i = 0; config->priv->outputs[i]; ++i)
     {
-	MateOutputInfo *output = config->outputs[i];
+	MateRROutputInfo *output = config->priv->outputs[i];
 
-	if (output->on)
+	if (output->priv->on)
 	{
-	    x_offset = MIN (x_offset, output->x);
-	    y_offset = MIN (y_offset, output->y);
+	    x_offset = MIN (x_offset, output->priv->x);
+	    y_offset = MIN (y_offset, output->priv->y);
 	}
     }
 
-    for (i = 0; config->outputs[i]; ++i)
+    for (i = 0; config->priv->outputs[i]; ++i)
     {
-	MateOutputInfo *output = config->outputs[i];
+	MateRROutputInfo *output = config->priv->outputs[i];
 	
-	if (output->on)
+	if (output->priv->on)
 	{
-	    output->x -= x_offset;
-	    output->y -= y_offset;
+	    output->priv->x -= x_offset;
+	    output->priv->y -= y_offset;
 	}
     }
 
     /* Only one primary, please */
     found = FALSE;
-    for (i = 0; config->outputs[i]; ++i)
+    for (i = 0; config->priv->outputs[i]; ++i)
     {
-        if (config->outputs[i]->primary)
+        if (config->priv->outputs[i]->priv->primary)
         {
             if (found)
             {
-                config->outputs[i]->primary = FALSE;
+                config->priv->outputs[i]->priv->primary = FALSE;
             }
             else
             {
@@ -1059,6 +1171,76 @@ mate_rr_config_sanitize (MateRRConfig *config)
     }
 }
 
+static gboolean
+output_info_is_laptop (MateRROutputInfo *info)
+{
+        if (info->priv->name
+            && (strstr (info->priv->name, "lvds") ||  /* Most drivers use an "LVDS" prefix... */
+                strstr (info->priv->name, "LVDS") ||
+                strstr (info->priv->name, "Lvds") ||
+                strstr (info->priv->name, "LCD")))    /* ... but fglrx uses "LCD" in some versions.  Shoot me now, kthxbye. */
+                return TRUE;
+
+        return FALSE;
+}
+
+gboolean
+mate_rr_config_ensure_primary (MateRRConfig *configuration)
+{
+        int              i;
+        MateRROutputInfo  *laptop;
+        MateRROutputInfo  *top_left;
+        gboolean        found;
+        MateRRConfigPrivate *priv;
+
+        g_return_val_if_fail (MATE_IS_RR_CONFIG (configuration), FALSE);
+
+        laptop = NULL;
+        top_left = NULL;
+        found = FALSE;
+        priv = configuration->priv;
+
+        for (i = 0; priv->outputs[i] != NULL; ++i) {
+                MateRROutputInfo *info = priv->outputs[i];
+
+                if (! info->priv->on) {
+                        info->priv->primary = FALSE;
+                        continue;
+		}
+
+                /* ensure only one */
+                if (info->priv->primary) {
+                        if (found) {
+                                info->priv->primary = FALSE;
+                        } else {
+                                found = TRUE;
+                        }
+                }
+
+                if (top_left == NULL
+                    || (info->priv->x < top_left->priv->x
+                        && info->priv->y < top_left->priv->y)) {
+                        top_left = info;
+                }
+                if (laptop == NULL
+                    && output_info_is_laptop (info)) {
+                        /* shame we can't find the connector type
+                           as with gnome_rr_output_is_laptop */
+                        laptop = info;
+                }
+        }
+
+        if (!found) {
+                if (laptop != NULL) {
+                        laptop->priv->primary = TRUE;
+                } else if (top_left != NULL) {
+		        /* Note: top_left can be NULL if all outputs are off */
+                        top_left->priv->primary = TRUE;
+                }
+        }
+
+        return !found;
+}
 
 gboolean
 mate_rr_config_save (MateRRConfig *configuration, GError **error)
@@ -1070,7 +1252,7 @@ mate_rr_config_save (MateRRConfig *configuration, GError **error)
     gchar *backup_filename;
     gboolean result;
 
-    g_return_val_if_fail (configuration != NULL, FALSE);
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (configuration), FALSE);
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
     output = g_string_new ("");
@@ -1088,9 +1270,10 @@ mate_rr_config_save (MateRRConfig *configuration, GError **error)
 	{
 	    if (!mate_rr_config_match (configurations[i], configuration))
 		emit_configuration (configurations[i], output);
+	    g_object_unref (configurations[i]);
 	}
 
-	configurations_free (configurations);
+	g_free (configurations);
     }
 
     emit_configuration (configuration, output);
@@ -1107,92 +1290,10 @@ mate_rr_config_save (MateRRConfig *configuration, GError **error)
 
     g_free (backup_filename);
     g_free (intended_filename);
+    g_string_free (output, TRUE);
 
     return result;
 }
-
-static MateRRConfig *
-mate_rr_config_copy (MateRRConfig *config)
-{
-    MateRRConfig *copy = g_new0 (MateRRConfig, 1);
-    int i;
-    GPtrArray *array = g_ptr_array_new ();
-
-    copy->clone = config->clone;
-    
-    for (i = 0; config->outputs[i] != NULL; ++i)
-	g_ptr_array_add (array, output_copy (config->outputs[i]));
-
-    g_ptr_array_add (array, NULL);
-    copy->outputs = (MateOutputInfo **)g_ptr_array_free (array, FALSE);
-
-    return copy;
-}
-
-static MateRRConfig *
-config_new_stored (MateRRScreen *screen, const char *filename, GError **error)
-{
-    MateRRConfig *current;
-    MateRRConfig **configs;
-    MateRRConfig *result;
-
-    g_return_val_if_fail (screen != NULL, NULL);
-    g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-    
-    current = mate_rr_config_new_current (screen);
-    
-    configs = configurations_read_from_file (filename, error);
-
-    result = NULL;
-    if (configs)
-    {
-	int i;
-	
-	for (i = 0; configs[i] != NULL; ++i)
-	{
-	    if (mate_rr_config_match (configs[i], current))
-	    {
-		result = mate_rr_config_copy (configs[i]);
-		break;
-	    }
-	}
-
-	if (result == NULL)
-	    g_set_error (error, MATE_RR_ERROR, MATE_RR_ERROR_NO_MATCHING_CONFIG,
-			 _("none of the saved display configurations matched the active configuration"));
-
-	configurations_free (configs);
-    }
-
-    mate_rr_config_free (current);
-    
-    return result;
-}
-
-MateRRConfig *
-mate_rr_config_new_stored (MateRRScreen *screen, GError **error)
-{
-    char *intended_filename;
-    MateRRConfig *config;
-
-    intended_filename = mate_rr_config_get_intended_filename ();
-
-    config = config_new_stored (screen, intended_filename, error);
-
-    g_free (intended_filename);
-
-    return config;
-}
-
-#ifndef MATE_DISABLE_DEPRECATED_SOURCE
-gboolean
-mate_rr_config_apply (MateRRConfig *config,
-		       MateRRScreen *screen,
-		       GError       **error)
-{
-    return mate_rr_config_apply_with_time (config, screen, GDK_CURRENT_TIME, error);
-}
-#endif
 
 gboolean
 mate_rr_config_apply_with_time (MateRRConfig *config,
@@ -1201,14 +1302,20 @@ mate_rr_config_apply_with_time (MateRRConfig *config,
 				 GError       **error)
 {
     CrtcAssignment *assignment;
-    MateOutputInfo **outputs;
+    MateRROutputInfo **outputs;
     gboolean result = FALSE;
+    int i;
+
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (config), FALSE);
+    g_return_val_if_fail (MATE_IS_RR_SCREEN (screen), FALSE);
 
     outputs = make_outputs (config);
 
     assignment = crtc_assignment_new (screen, outputs, error);
 
-    outputs_free (outputs);
+    for (i = 0; outputs[i] != NULL; i++)
+	g_object_unref (outputs[i]);
+    g_free (outputs);
     
     if (assignment)
     {
@@ -1222,74 +1329,6 @@ mate_rr_config_apply_with_time (MateRRConfig *config,
 
     return result;
 }
-
-#ifndef MATE_DISABLE_DEPRECATED_SOURCE
-/**
- * mate_rr_config_apply_stored:
- * @screen: A #MateRRScreen
- * @error: Location to store error, or %NULL
- *
- * See the documentation for mate_rr_config_apply_from_filename().  This
- * function simply calls that other function with a filename of
- * mate_rr_config_get_intended_filename().
-
- * @Deprecated: 2.26: Use mate_rr_config_apply_from_filename() instead and pass it
- * the filename from mate_rr_config_get_intended_filename().
- */
-gboolean
-mate_rr_config_apply_stored (MateRRScreen *screen, GError **error)
-{
-    char *filename;
-    gboolean result;
-
-    filename = mate_rr_config_get_intended_filename ();
-    result = mate_rr_config_apply_from_filename_with_time (screen, filename, GDK_CURRENT_TIME, error);
-    g_free (filename);
-
-    return result;
-}
-#endif
-
-#ifndef MATE_DISABLE_DEPRECATED_SOURCE
-/* mate_rr_config_apply_from_filename:
- * @screen: A #MateRRScreen
- * @filename: Path of the file to look in for stored RANDR configurations.
- * @error: Location to store error, or %NULL
- *
- * First, this function refreshes the @screen to match the current RANDR
- * configuration from the X server.  Then, it tries to load the file in
- * @filename and looks for suitable matching RANDR configurations in the file;
- * if one is found, that configuration will be applied to the current set of
- * RANDR outputs.
- *
- * Typically, @filename is the result of mate_rr_config_get_intended_filename() or
- * mate_rr_config_get_backup_filename().
- *
- * Returns: TRUE if the RANDR configuration was loaded and applied from
- * $(XDG_CONFIG_HOME)/monitors.xml, or FALSE otherwise:
- *
- * If the current RANDR configuration could not be refreshed, the @error will
- * have a domain of #MATE_RR_ERROR and a corresponding error code.
- *
- * If the file in question is loaded successfully but the configuration cannot
- * be applied, the @error will have a domain of #MATE_RR_ERROR.  Note that an
- * error code of #MATE_RR_ERROR_NO_MATCHING_CONFIG is not a real error; it
- * simply means that there were no stored configurations that match the current
- * set of RANDR outputs.
- *
- * If the file in question cannot be loaded, the @error will have a domain of
- * #G_FILE_ERROR.  Note that an error code of G_FILE_ERROR_NOENT is not really
- * an error, either; it means that there was no stored configuration file and so
- * nothing is changed.
- *
- * @Deprecated: 2.28: use mate_rr_config_apply_from_filename_with_time() instead.
- */
-gboolean
-mate_rr_config_apply_from_filename (MateRRScreen *screen, const char *filename, GError **error)
-{
-    return mate_rr_config_apply_from_filename_with_time (screen, filename, GDK_CURRENT_TIME, error);
-}
-#endif
 
 /* mate_rr_config_apply_from_filename_with_time:
  * @screen: A #MateRRScreen
@@ -1329,7 +1368,7 @@ mate_rr_config_apply_from_filename_with_time (MateRRScreen *screen, const char *
     MateRRConfig *stored;
     GError *my_error;
 
-    g_return_val_if_fail (screen != NULL, FALSE);
+    g_return_val_if_fail (MATE_IS_RR_SCREEN (screen), FALSE);
     g_return_val_if_fail (filename != NULL, FALSE);
     g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
@@ -1343,23 +1382,62 @@ mate_rr_config_apply_from_filename_with_time (MateRRScreen *screen, const char *
 	    /* This means the screen didn't change, so just proceed */
     }
 
-    stored = config_new_stored (screen, filename, error);
+    stored = g_object_new (MATE_TYPE_RR_CONFIG, "screen", screen, NULL);
 
-    if (stored)
+    if (mate_rr_config_load_filename (stored, filename, error))
     {
 	gboolean result;
 
+	mate_rr_config_ensure_primary (stored);
 	result = mate_rr_config_apply_with_time (stored, screen, timestamp, error);
 
-	mate_rr_config_free (stored);
+	g_object_unref (stored);
 	
 	return result;
     }
     else
     {
+        g_object_unref (stored);
 	return FALSE;
     }
 }
+
+/**
+ * mate_rr_config_get_outputs:
+ *
+ * Returns: (array zero-terminated=1) (element-type MateDesktop.RROutputInfo) (transfer none): the output configuration for this #MateRRConfig
+ */
+MateRROutputInfo **
+mate_rr_config_get_outputs (MateRRConfig *self)
+{
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (self), NULL);
+
+    return self->priv->outputs;
+}
+
+/**
+ * mate_rr_config_get_clone:
+ *
+ * Returns: whether at least two outputs are at (0, 0) offset and they
+ * have the same width/height.  Those outputs are of course connected and on
+ * (i.e. they have a CRTC assigned).
+ */
+gboolean
+mate_rr_config_get_clone (MateRRConfig *self)
+{
+    g_return_val_if_fail (MATE_IS_RR_CONFIG (self), FALSE);
+
+    return self->priv->clone;
+}
+
+void
+mate_rr_config_set_clone (MateRRConfig *self, gboolean clone)
+{
+    g_return_if_fail (MATE_IS_RR_CONFIG (self));
+
+    self->priv->clone = clone;
+}
+
 
 /*
  * CRTC assignment
@@ -1603,12 +1681,12 @@ accumulate_error (GString *accumulated_error, GError *error)
  */
 static gboolean
 real_assign_crtcs (MateRRScreen *screen,
-		   MateOutputInfo **outputs,
+		   MateRROutputInfo **outputs,
 		   CrtcAssignment *assignment,
 		   GError **error)
 {
     MateRRCrtc **crtcs = mate_rr_screen_list_crtcs (screen);
-    MateOutputInfo *output;
+    MateRROutputInfo *output;
     int i;
     gboolean tried_mode;
     GError *my_error;
@@ -1620,7 +1698,7 @@ real_assign_crtcs (MateRRScreen *screen,
 	return TRUE;
 
     /* It is always allowed for an output to be turned off */
-    if (!output->on)
+    if (!output->priv->on)
     {
 	return real_assign_crtcs (screen, outputs + 1, assignment, error);
     }
@@ -1644,7 +1722,7 @@ real_assign_crtcs (MateRRScreen *screen,
 	 */
 	for (pass = 0; pass < 2; ++pass)
 	{
-	    MateRROutput *mate_rr_output = mate_rr_screen_get_output_by_name (screen, output->name);
+	    MateRROutput *mate_rr_output = mate_rr_screen_get_output_by_name (screen, output->priv->name);
 	    MateRRMode **modes = mate_rr_output_list_modes (mate_rr_output);
 	    int j;
 
@@ -1663,21 +1741,21 @@ real_assign_crtcs (MateRRScreen *screen,
 					_("CRTC %d: trying mode %dx%d@%dHz with output at %dx%d@%dHz (pass %d)\n"),
 					crtc_id,
 					mode_width, mode_height, mode_freq,
-					output->width, output->height, output->rate,
+					output->priv->width, output->priv->height, output->priv->rate,
 					pass);
 
-		if (mode_width == output->width	&&
-		    mode_height == output->height &&
-		    (pass == 1 || mode_freq == output->rate))
+		if (mode_width == output->priv->width	&&
+		    mode_height == output->priv->height &&
+		    (pass == 1 || mode_freq == output->priv->rate))
 		{
 		    tried_mode = TRUE;
 
 		    my_error = NULL;
 		    if (crtc_assignment_assign (
 			    assignment, crtc, modes[j],
-			    output->x, output->y,
-			    output->rotation,
-                            output->primary,
+			    output->priv->x, output->priv->y,
+			    output->priv->rotation,
+                            output->priv->primary,
 			    mate_rr_output,
 			    &my_error))
 		    {
@@ -1765,7 +1843,7 @@ get_required_virtual_size (CrtcAssignment *assign, int *width, int *height)
 }
 
 static CrtcAssignment *
-crtc_assignment_new (MateRRScreen *screen, MateOutputInfo **outputs, GError **error)
+crtc_assignment_new (MateRRScreen *screen, MateRROutputInfo **outputs, GError **error)
 {
     CrtcAssignment *assignment = g_new0 (CrtcAssignment, 1);
 
@@ -1843,7 +1921,7 @@ crtc_assignment_apply (CrtcAssignment *assign, guint32 timestamp, GError **error
      * status.
      */
 
-    gdk_x11_display_grab (gdk_screen_get_display (assign->screen->gdk_screen));
+    gdk_x11_display_grab (gdk_screen_get_display (assign->screen->priv->gdk_screen));
 
     /* Turn off all crtcs that are currently displaying outside the new screen,
      * or are not used in the new setup
@@ -1907,7 +1985,7 @@ crtc_assignment_apply (CrtcAssignment *assign, guint32 timestamp, GError **error
 
     mate_rr_screen_set_primary_output (assign->screen, assign->primary);
 
-    gdk_x11_display_ungrab (gdk_screen_get_display (assign->screen->gdk_screen));
+    gdk_x11_display_ungrab (gdk_screen_get_display (assign->screen->priv->gdk_screen));
 
     return success;
 }

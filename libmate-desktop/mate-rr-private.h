@@ -1,6 +1,8 @@
 #ifndef MATE_RR_PRIVATE_H
 #define MATE_RR_PRIVATE_H
 
+#include <X11/Xlib.h>
+
 #ifdef HAVE_RANDR
 #include <X11/extensions/Xrandr.h>
 #endif
@@ -31,7 +33,7 @@ struct ScreenInfo
 #endif
 };
 
-struct MateRRScreen
+struct MateRRScreenPrivate
 {
     GdkScreen *			gdk_screen;
     GdkWindow *			gdk_root;
@@ -44,10 +46,37 @@ struct MateRRScreen
     int				rr_major_version;
     int				rr_minor_version;
     
-    MateRRScreenChanged	callback;
-    gpointer			data;
-
     Atom                        connector_type_atom;
+};
+
+struct MateRROutputInfoPrivate
+{
+    char *		name;
+
+    gboolean		on;
+    int			width;
+    int			height;
+    int			rate;
+    int			x;
+    int			y;
+    MateRRRotation	rotation;
+
+    gboolean		connected;
+    gchar		vendor[4];
+    guint		product;
+    guint		serial;
+    double		aspect;
+    int			pref_width;
+    int			pref_height;
+    char *		display_name;
+    gboolean            primary;
+};
+
+struct MateRRConfigPrivate
+{
+  gboolean clone;
+  MateRRScreen *screen;
+  MateRROutputInfo **outputs;
 };
 
 #endif

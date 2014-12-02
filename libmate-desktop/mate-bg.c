@@ -1637,6 +1637,11 @@ fit_factor (int from_width, int from_height,
 	return MIN (to_width  / (double) from_width, to_height / (double) from_height);
 }
 
+/**
+ * mate_bg_create_thumbnail:
+ *
+ * Returns: (transfer full): a #GdkPixbuf showing the background as a thumbnail
+ */
 GdkPixbuf *
 mate_bg_create_thumbnail (MateBG               *bg,
 		           MateDesktopThumbnailFactory *factory,
@@ -1940,14 +1945,13 @@ mate_bg_set_pixmap_as_root  (GdkScreen *screen, GdkPixmap *surface)
  * mate_bg_set_surface_as_root_with_crossfade:
  * @screen: the #GdkScreen to change root background on
  * @surface: the cairo xlib surface to set root background from
- * @context: a #GMainContext or %NULL
  *
  * Set the root pixmap, and properties pointing to it.
  * This function differs from mate_bg_set_surface_as_root()
  * in that it adds a subtle crossfade animation from the
  * current root pixmap to the new one.
  *
- * Return value: a #MateBGCrossfade object
+ * Return value: (transfer full): a #MateBGCrossfade object
  **/
 MateBGCrossfade *
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -3125,6 +3129,8 @@ stack_is (SlideShow *parser,
 		s = va_arg (args, const char *);
 	}
 
+	va_end (args);
+
 	l1 = stack;
 	l2 = parser->stack->head;
 
@@ -3157,9 +3163,14 @@ handle_text (GMarkupParseContext *context,
 	     GError             **err)
 {
 	SlideShow *parser = user_data;
-	Slide *slide = parser->slides->tail? parser->slides->tail->data : NULL;
 	FileSize *fs;
 	gint i;
+
+	g_return_if_fail (parser != NULL);
+	g_return_if_fail (parser->slides != NULL);
+	g_return_if_fail (parser->slides->tail != NULL);
+
+	Slide *slide = parser->slides->tail->data;
 
 	if (stack_is (parser, "year", "starttime", "background", NULL)) {
 		parser->start_tm.tm_year = parse_int (text) - 1900;
@@ -3503,9 +3514,15 @@ mate_bg_changes_with_time (MateBG *bg)
 	return FALSE;
 }
 
-/* Creates a thumbnail for a certain frame, where 'frame' is somewhat
+/**
+ * mate_bg_create_frame_thumbnail:
+ *
+ * Creates a thumbnail for a certain frame, where 'frame' is somewhat
  * vaguely defined as 'suitable point to show while single-stepping
- * through the slideshow'. Returns NULL if frame_num is out of bounds.
+ * through the slideshow'.
+ *
+ * Returns: (transfer full): the newly created thumbnail or
+ * or NULL if frame_num is out of bounds.
  */
 GdkPixbuf *
 mate_bg_create_frame_thumbnail (MateBG			*bg,
