@@ -303,12 +303,10 @@ create_loader (GFile        *file,
                const guchar *data,
                gsize         size)
 {
-  GdkPixbufLoader *loader;
+  GdkPixbufLoader *loader = NULL;
   GError *error = NULL;
   char *mime_type;
   char *filename;
-
-  loader = NULL;
 
   /* need to specify the type here because the gdk_pixbuf_loader_write
      doesn't have access to the filename in order to correct detect
@@ -321,7 +319,7 @@ create_loader (GFile        *file,
     loader = gdk_pixbuf_loader_new_with_mime_type (mime_type, &error);
   }
 
-  if (loader == NULL) {
+  if (loader == NULL && error != NULL) {
     g_warning ("Unable to create loader for mime type %s: %s", mime_type, error->message);
     g_clear_error (&error);
     loader = gdk_pixbuf_loader_new ();
@@ -852,7 +850,7 @@ mate_desktop_thumbnail_factory_new (MateDesktopThumbnailSize size)
  *
  * Usage of this function is threadsafe.
  *
- * Return value: The absolute path of the thumbnail, or %NULL if none exist.
+ * Return value: (transfer full): The absolute path of the thumbnail, or %NULL if none exist.
  *
  * Since: 2.2
  **/

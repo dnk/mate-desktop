@@ -29,11 +29,9 @@ AM_CFLAGS = $(WARN_CFLAGS)
 
 noinst_PROGRAMS = test-ditem test
 
-if USE_GTK3
-lib_LTLIBRARIES=libmate-desktop-3.la
+CLEANFILES =
 
-libmate_desktop_3_la_SOURCES = \
-	mate-desktop-item.c	\
+introspection_sources = \
 	mate-desktop-utils.c	\
 	mate-desktop-thumbnail.c \
 	mate-thumbnail-pixbuf-utils.c \
@@ -45,12 +43,20 @@ libmate_desktop_3_la_SOURCES = \
 	display-name.c		\
 	mate-rr.c		\
 	mate-rr-config.c	\
+	mate-rr-output-info.c	\
 	mate-rr-labeler.c	\
-	mate-rr-private.h	\
 	mate-colorbutton.c \
 	mate-colorsel.c \
 	mate-colorseldialog.c \
-	edid-parse.c		\
+	edid-parse.c
+
+if USE_GTK3
+lib_LTLIBRARIES=libmate-desktop-3.la
+
+libmate_desktop_3_la_SOURCES = \
+	$(introspection_sources)	\
+	mate-desktop-item.c	\
+	mate-rr-private.h	\
 	edid.h			\
 	private.h
 
@@ -65,26 +71,11 @@ libmate_desktop_3_la_LDFLAGS = \
 else
 lib_LTLIBRARIES=libmate-desktop-2.la
 
-libmate_desktop_2_la_SOURCES = \
-	mate-desktop-item.c	\
-	mate-desktop-utils.c	\
-	mate-desktop-thumbnail.c \
-	mate-thumbnail-pixbuf-utils.c \
-	mate-dconf.c \
-	mate-gsettings.c \
-	mate-aboutdialog.c \
-	mate-bg.c		\
-	mate-bg-crossfade.c	\
-	display-name.c		\
-	mate-rr.c		\
-	mate-rr-config.c	\
-	mate-rr-labeler.c	\
-	mate-rr-private.h	\
-	mate-colorbutton.c \
-	mate-colorsel.c \
-	mate-colorseldialog.c \
-	edid-parse.c		\
-	edid.h			\
+libmate_desktop_2_la_SOURCES =		\
+	$(introspection_sources)	\
+	mate-desktop-item.c		\
+	mate-rr-private.h		\
+	edid.h				\
 	private.h
 
 libmate_desktop_2_la_LIBADD =	\
@@ -94,9 +85,9 @@ libmate_desktop_2_la_LIBADD =	\
 
 libmate_desktop_2_la_LDFLAGS = \
 	-version-info $(LT_VERSION) \
+	-export-symbols-regex "^mate_.*" \
 	-no-undefined
 endif
-
 
 test_SOURCES = \
 	test.c
@@ -141,6 +132,41 @@ pnpdata_DATA_dist = pnp.ids
 
 check:
 	test -s $(top_srcdir)/libmate-desktop/pnp.ids
+
+-include $(INTROSPECTION_MAKEFILE)
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+
+if HAVE_INTROSPECTION
+if USE_GTK3
+MateDesktop-2.0.gir: libmate-desktop-3.la
+MateDesktop_2_0_gir_INCLUDES = GObject-2.0 Gtk-$(GTK_API_VERSION)
+MateDesktop_2_0_gir_PACKAGES = gdk-pixbuf-2.0 glib-2.0 gobject-2.0 gio-2.0 gtk+-$(GTK_API_VERSION)
+else
+MateDesktop-2.0.gir: libmate-desktop-2.la
+MateDesktop_2_0_gir_INCLUDES = GObject-2.0 Gtk-$(GTK_API_VERSION) GConf-2.0
+MateDesktop_2_0_gir_PACKAGES = gdk-pixbuf-2.0 glib-2.0 gobject-2.0 gio-2.0 gtk+-$(GTK_API_VERSION) gconf-2.0
+endif
+MateDesktop_2_0_gir_CFLAGS = -DMATE_DESKTOP_USE_UNSTABLE_API -I$(top_srcdir)
+if USE_GTK3
+MateDesktop_2_0_gir_LIBS = libmate-desktop-3.la
+else
+MateDesktop_2_0_gir_LIBS = libmate-desktop-2.la
+endif
+MateDesktop_2_0_gir_FILES = $(introspection_sources) $(libmate_desktop_HEADERS)
+MateDesktop_2_0_gir_SCANNERFLAGS = --identifier-prefix=Mate --symbol-prefix=mate_
+INTROSPECTION_SCANNER_ARGS += $(patsubst %,--c-include='libmate-desktop/%',$(libmate_desktop_HEADERS))
+INTROSPECTION_GIRS += MateDesktop-2.0.gir
+
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(INTROSPECTION_GIRS)
+
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+
+CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif
 
 if USE_GTK3
 EXTRA_DIST = \

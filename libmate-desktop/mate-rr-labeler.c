@@ -29,7 +29,6 @@
 
 #include <config.h>
 #include <glib/gi18n-lib.h>
-#include "mate-rr-labeler.h"
 #include <gtk/gtk.h>
 
 #include <X11/Xproto.h>
@@ -38,9 +37,9 @@
 #include <X11/Xatom.h>
 #include <gdk/gdkx.h>
 
-struct _MateRRLabeler {
-	GObject parent;
+#include "mate-rr-labeler.h"
 
+struct _MateRRLabelerPrivate {
 	MateRRConfig *config;
 
 	int num_outputs;
@@ -56,14 +55,49 @@ struct _MateRRLabeler {
 	Atom        workarea_atom;
 };
 
-struct _MateRRLabelerClass {
-	GObjectClass parent_class;
+enum {
+	PROP_0,
+	PROP_CONFIG,
+	PROP_LAST
 };
 
 G_DEFINE_TYPE (MateRRLabeler, mate_rr_labeler, G_TYPE_OBJECT);
 
 static void mate_rr_labeler_finalize (GObject *object);
 static void create_label_windows (MateRRLabeler *labeler);
+static void setup_from_config (MateRRLabeler *labeler);
+
+static int
+get_current_desktop (GdkScreen *screen)
+{
+        Display *display;
+        Window win;
+        Atom current_desktop, type;
+        int format;
+        unsigned long n_items, bytes_after;
+        unsigned char *data_return = NULL;
+        int workspace = 0;
+
+        display = GDK_DISPLAY_XDISPLAY (gdk_screen_get_display (screen));
+        win = XRootWindow (display, GDK_SCREEN_XNUMBER (screen));
+
+        current_desktop = XInternAtom (display, "_NET_CURRENT_DESKTOP", True);
+
+        XGetWindowProperty (display,
+                            win,
+                            current_desktop,
+                            0, G_MAXLONG,
+                            False, XA_CARDINAL,
+                            &type, &format, &n_items, &bytes_after,
+                            &data_return);
+
+        if (type == XA_CARDINAL && format == 32 && n_items > 0)
+                workspace = (int) data_return[0];
+        if (data_return)
+                XFree (data_return);
+
+        return workspace;
+}
 
 static gboolean
 get_work_area (MateRRLabeler *labeler,
@@ -80,18 +114,19 @@ get_work_area (MateRRLabeler *labeler,
 	long           *workareas;
 	int             result;
 	int             disp_screen;
+	int             desktop;
 	Display        *display;
 
-	display = GDK_DISPLAY_XDISPLAY (gdk_screen_get_display (labeler->screen));
+	display = GDK_DISPLAY_XDISPLAY (gdk_screen_get_display (labeler->priv->screen));
 	workarea = XInternAtom (display, "_NET_WORKAREA", True);
 
-	disp_screen = GDK_SCREEN_XNUMBER (labeler->screen);
+	disp_screen = GDK_SCREEN_XNUMBER (labeler->priv->screen);
 
 	/* Defaults in case of error */
 	rect->x = 0;
 	rect->y = 0;
-	rect->width = gdk_screen_get_width (labeler->screen);
-	rect->height = gdk_screen_get_height (labeler->screen);
+	rect->width = gdk_screen_get_width (labeler->priv->screen);
+	rect->height = gdk_screen_get_height (labeler->priv->screen);
 
 	if (workarea == None)
 		return FALSE;
@@ -118,11 +153,13 @@ get_work_area (MateRRLabeler *labeler,
 		return FALSE;
 	}
 
+	desktop = get_current_desktop (labeler->priv->screen);
+
 	workareas = (long *) ret_workarea;
-	rect->x = workareas[disp_screen * 4];
-	rect->y = workareas[disp_screen * 4 + 1];
-	rect->width = workareas[disp_screen * 4 + 2];
-	rect->height = workareas[disp_screen * 4 + 3];
+	rect->x = workareas[desktop * 4];
+	rect->y = workareas[desktop * 4 + 1];
+	rect->width = workareas[desktop * 4 + 2];
+	rect->height = workareas[desktop * 4 + 3];
 
 	XFree (ret_workarea);
 
@@ -139,7 +176,7 @@ screen_xevent_filter (GdkXEvent      *xevent,
 	xev = (XEvent *) xevent;
 
 	if (xev->type == PropertyNotify &&
-	    xev->xproperty.atom == labeler->workarea_atom) {
+	    xev->xproperty.atom == labeler->priv->workarea_atom) {
 		/* update label positions */
 		mate_rr_labeler_hide (labeler);
 		create_label_windows (labeler);
@@ -153,25 +190,62 @@ mate_rr_labeler_init (MateRRLabeler *labeler)
 {
 	GdkWindow *gdkwindow;
 
-	labeler->workarea_atom = XInternAtom (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
-					      "_NET_WORKAREA",
-					      True);
+	labeler->priv = G_TYPE_INSTANCE_GET_PRIVATE (labeler, MATE_TYPE_RR_LABELER, MateRRLabelerPrivate);
 
-	labeler->screen = gdk_screen_get_default ();
+	labeler->priv->workarea_atom = XInternAtom (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+						    "_NET_WORKAREA",
+						    True);
+
+	labeler->priv->screen = gdk_screen_get_default ();
 	/* code is not really designed to handle multiple screens so *shrug* */
-	gdkwindow = gdk_screen_get_root_window (labeler->screen);
+	gdkwindow = gdk_screen_get_root_window (labeler->priv->screen);
 	gdk_window_add_filter (gdkwindow, (GdkFilterFunc) screen_xevent_filter, labeler);
 	gdk_window_set_events (gdkwindow, gdk_window_get_events (gdkwindow) | GDK_PROPERTY_CHANGE_MASK);
 }
 
 static void
-mate_rr_labeler_class_init (MateRRLabelerClass *class)
+mate_rr_labeler_set_property (GObject *gobject, guint property_id, const GValue *value, GParamSpec *param_spec)
+{
+	MateRRLabeler *self = MATE_RR_LABELER (gobject);
+
+	switch (property_id) {
+	case PROP_CONFIG:
+		self->priv->config = MATE_RR_CONFIG (g_value_dup_object (value));
+		return;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (gobject, property_id, param_spec);
+	}
+}
+
+static GObject *
+mate_rr_labeler_constructor (GType type, guint n_construct_properties, GObjectConstructParam *construct_properties)
+{
+	MateRRLabeler *self = (MateRRLabeler*) G_OBJECT_CLASS (mate_rr_labeler_parent_class)->constructor (type, n_construct_properties, construct_properties);
+
+	setup_from_config (self);
+
+	return (GObject*) self;
+}
+
+static void
+mate_rr_labeler_class_init (MateRRLabelerClass *klass)
 {
 	GObjectClass *object_class;
 
-	object_class = (GObjectClass *) class;
+	g_type_class_add_private (klass, sizeof (MateRRLabelerPrivate));
 
+	object_class = (GObjectClass *) klass;
+
+	object_class->set_property = mate_rr_labeler_set_property;
 	object_class->finalize = mate_rr_labeler_finalize;
+	object_class->constructor = mate_rr_labeler_constructor;
+
+	g_object_class_install_property (object_class, PROP_CONFIG, g_param_spec_object ("config",
+											 "Configuration",
+											 "RandR configuration to label",
+											 MATE_TYPE_RR_CONFIG,
+											 G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
+											 G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB));
 }
 
 static void
@@ -182,21 +256,19 @@ mate_rr_labeler_finalize (GObject *object)
 
 	labeler = MATE_RR_LABELER (object);
 
-	gdkwindow = gdk_screen_get_root_window (labeler->screen);
+	gdkwindow = gdk_screen_get_root_window (labeler->priv->screen);
 	gdk_window_remove_filter (gdkwindow, (GdkFilterFunc) screen_xevent_filter, labeler);
 
-	/* We don't destroy the labeler->config (a MateRRConfig*) here; let our
-	 * caller do that instead.
-	 */
-
-	if (labeler->windows != NULL) {
-		mate_rr_labeler_hide (labeler);
-		g_free (labeler->windows);
-		labeler->windows = NULL;
+	if (labeler->priv->config != NULL) {
+		g_object_unref (labeler->priv->config);
 	}
 
-	g_free (labeler->palette);
-	labeler->palette = NULL;
+	if (labeler->priv->windows != NULL) {
+		mate_rr_labeler_hide (labeler);
+		g_free (labeler->priv->windows);
+	}
+
+	g_free (labeler->priv->palette);
 
 	G_OBJECT_CLASS (mate_rr_labeler_parent_class)->finalize (object);
 }
@@ -205,8 +277,9 @@ static int
 count_outputs (MateRRConfig *config)
 {
 	int i;
+	MateRROutputInfo **outputs = mate_rr_config_get_outputs (config);
 
-	for (i = 0; config->outputs[i] != NULL; i++)
+	for (i = 0; outputs[i] != NULL; i++)
 		;
 
 	return i;
@@ -227,36 +300,36 @@ make_palette (MateRRLabeler *labeler)
 	double end_hue;
 	int i;
 
-	g_assert (labeler->num_outputs > 0);
+	g_assert (labeler->priv->num_outputs > 0);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-	labeler->palette = g_new (GdkRGBA, labeler->num_outputs);
+	labeler->priv->palette = g_new (GdkRGBA, labeler->priv->num_outputs);
 #else
-	labeler->palette = g_new (GdkColor, labeler->num_outputs);
+	labeler->priv->palette = g_new (GdkColor, labeler->priv->num_outputs);
 #endif
 
 	start_hue = 0.0; /* red */
 	end_hue   = 2.0/3; /* blue */
 
-	for (i = 0; i < labeler->num_outputs; i++) {
+	for (i = 0; i < labeler->priv->num_outputs; i++) {
 		double h, s, v;
 		double r, g, b;
 
-		h = start_hue + (end_hue - start_hue) / labeler->num_outputs * i;
+		h = start_hue + (end_hue - start_hue) / labeler->priv->num_outputs * i;
 		s = 1.0 / 3;
 		v = 1.0;
 
 		gtk_hsv_to_rgb (h, s, v, &r, &g, &b);
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-		labeler->palette[i].red   = r;
-		labeler->palette[i].green = g;
-		labeler->palette[i].blue  = b;
-		labeler->palette[i].alpha  = 1.0;
+		labeler->priv->palette[i].red   = r;
+		labeler->priv->palette[i].green = g;
+		labeler->priv->palette[i].blue  = b;
+		labeler->priv->palette[i].alpha  = 1.0;
 #else
-		labeler->palette[i].red   = (int) (65535 * r + 0.5);
-		labeler->palette[i].green = (int) (65535 * g + 0.5);
-		labeler->palette[i].blue  = (int) (65535 * b + 0.5);
+		labeler->priv->palette[i].red   = (int) (65535 * r + 0.5);
+		labeler->priv->palette[i].green = (int) (65535 * g + 0.5);
+		labeler->priv->palette[i].blue  = (int) (65535 * b + 0.5);
 #endif
 	}
 }
@@ -327,8 +400,8 @@ position_window (MateRRLabeler  *labeler,
 	int             monitor_num;
 
 	get_work_area (labeler, &workarea);
-	monitor_num = gdk_screen_get_monitor_at_point (labeler->screen, x, y);
-	gdk_screen_get_monitor_geometry (labeler->screen,
+	monitor_num = gdk_screen_get_monitor_at_point (labeler->priv->screen, x, y);
+	gdk_screen_get_monitor_geometry (labeler->priv->screen,
                                          monitor_num,
                                          &monitor);
 	gdk_rectangle_intersect (&monitor, &workarea, &workarea);
@@ -338,10 +411,10 @@ position_window (MateRRLabeler  *labeler,
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 static GtkWidget *
-create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkRGBA *color)
+create_label_window (MateRRLabeler *labeler, MateRROutputInfo *output, GdkRGBA *color)
 #else
 static GtkWidget *
-create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *color)
+create_label_window (MateRRLabeler *labeler, MateRROutputInfo *output, GdkColor *color)
 #endif
 {
 	GtkWidget *window;
@@ -353,6 +426,7 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 #else
 	GdkColor black = { 0, 0, 0, 0 };
 #endif
+	int x,y;
 
 	window = gtk_window_new (GTK_WINDOW_POPUP);
 	gtk_widget_set_app_paintable (window, TRUE);
@@ -373,7 +447,7 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 			  G_CALLBACK (label_window_expose_event_cb), labeler);
 #endif
 
-	if (labeler->config->clone) {
+	if (mate_rr_config_get_clone (labeler->priv->config)) {
 		/* Keep this string in sync with mate-control-center/capplets/display/xrandr-capplet.c:get_display_name() */
 
 		/* Translators:  this is the feature where what you see on your laptop's
@@ -383,7 +457,7 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 		 */
 		display_name = _("Mirror Screens");
 	} else
-		display_name = output->display_name;
+		display_name = mate_rr_output_info_get_display_name (output);
 
 	str = g_strdup_printf ("<b>%s</b>", display_name);
 	widget = gtk_label_new (NULL);
@@ -403,7 +477,8 @@ create_label_window (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *c
 	gtk_container_add (GTK_CONTAINER (window), widget);
 
 	/* Should we center this at the top edge of the monitor, instead of using the upper-left corner? */
-	position_window (labeler, window, output->x, output->y);
+	mate_rr_output_info_get_geometry (output, &x, &y, NULL, NULL);
+	position_window (labeler, window, x, y);
 
 	gtk_widget_show_all (window);
 
@@ -415,26 +490,29 @@ create_label_windows (MateRRLabeler *labeler)
 {
 	int i;
 	gboolean created_window_for_clone;
+	MateRROutputInfo **outputs;
 
-	labeler->windows = g_new (GtkWidget *, labeler->num_outputs);
+	labeler->priv->windows = g_new (GtkWidget *, labeler->priv->num_outputs);
 
 	created_window_for_clone = FALSE;
 
-	for (i = 0; i < labeler->num_outputs; i++) {
-		if (!created_window_for_clone && labeler->config->outputs[i]->on) {
-			labeler->windows[i] = create_label_window (labeler, labeler->config->outputs[i], labeler->palette + i);
+	outputs = mate_rr_config_get_outputs (labeler->priv->config);
 
-			if (labeler->config->clone)
+	for (i = 0; i < labeler->priv->num_outputs; i++) {
+		if (!created_window_for_clone && mate_rr_output_info_is_active (outputs[i])) {
+			labeler->priv->windows[i] = create_label_window (labeler, outputs[i], labeler->priv->palette + i);
+
+			if (mate_rr_config_get_clone (labeler->priv->config))
 				created_window_for_clone = TRUE;
 		} else
-			labeler->windows[i] = NULL;
+			labeler->priv->windows[i] = NULL;
 	}
 }
 
 static void
 setup_from_config (MateRRLabeler *labeler)
 {
-	labeler->num_outputs = count_outputs (labeler->config);
+	labeler->priv->num_outputs = count_outputs (labeler->priv->config);
 
 	make_palette (labeler);
 
@@ -444,51 +522,49 @@ setup_from_config (MateRRLabeler *labeler)
 MateRRLabeler *
 mate_rr_labeler_new (MateRRConfig *config)
 {
-	MateRRLabeler *labeler;
+	g_return_val_if_fail (MATE_IS_RR_CONFIG (config), NULL);
 
-	g_return_val_if_fail (config != NULL, NULL);
-
-	labeler = g_object_new (MATE_TYPE_RR_LABELER, NULL);
-	labeler->config = config;
-
-	setup_from_config (labeler);
-
-	return labeler;
+	return g_object_new (MATE_TYPE_RR_LABELER, "config", config, NULL);
 }
 
 void
 mate_rr_labeler_hide (MateRRLabeler *labeler)
 {
 	int i;
+	MateRRLabelerPrivate *priv;
 
 	g_return_if_fail (MATE_IS_RR_LABELER (labeler));
 
-	if (labeler->windows == NULL)
+	priv = labeler->priv;
+
+	if (priv->windows == NULL)
 		return;
 
-	for (i = 0; i < labeler->num_outputs; i++)
-		if (labeler->windows[i] != NULL) {
-			gtk_widget_destroy (labeler->windows[i]);
-			labeler->windows[i] = NULL;
-		}
-	g_free (labeler->windows);
-	labeler->windows = NULL;
-
+	for (i = 0; i < priv->num_outputs; i++)
+		if (priv->windows[i] != NULL) {
+			gtk_widget_destroy (priv->windows[i]);
+			priv->windows[i] = NULL;
+	}
+	g_free (priv->windows);
+	priv->windows = NULL;
 }
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 void
-mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkRGBA *color_out)
+mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateRROutputInfo *output, GdkRGBA *color_out)
 {
 	int i;
+	MateRROutputInfo **outputs;
 
 	g_return_if_fail (MATE_IS_RR_LABELER (labeler));
-	g_return_if_fail (output != NULL);
+	g_return_if_fail (MATE_IS_RR_OUTPUT_INFO (output));
 	g_return_if_fail (color_out != NULL);
 
-	for (i = 0; i < labeler->num_outputs; i++)
-		if (labeler->config->outputs[i] == output) {
-			*color_out = labeler->palette[i];
+	outputs = mate_rr_config_get_outputs (labeler->priv->config);
+
+	for (i = 0; i < labeler->priv->num_outputs; i++)
+		if (outputs[i] == output) {
+			*color_out = labeler->priv->palette[i];
 			return;
 		}
 
@@ -502,22 +578,25 @@ mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateOutputInfo *out
 #endif
 
 void
-mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateOutputInfo *output, GdkColor *color_out)
+mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateRROutputInfo *output, GdkColor *color_out)
 {
 	int i;
+	MateRROutputInfo **outputs;
 
 	g_return_if_fail (MATE_IS_RR_LABELER (labeler));
-	g_return_if_fail (output != NULL);
+	g_return_if_fail (MATE_IS_RR_OUTPUT_INFO (output));
 	g_return_if_fail (color_out != NULL);
 
-	for (i = 0; i < labeler->num_outputs; i++)
-		if (labeler->config->outputs[i] == output) {
+	outputs = mate_rr_config_get_outputs (labeler->priv->config);
+
+	for (i = 0; i < labeler->priv->num_outputs; i++)
+		if (outputs[i] == output) {
 #if GTK_CHECK_VERSION (3, 0, 0)
-			color_out->red = labeler->palette[i].red * 0xffff;
-			color_out->green = labeler->palette[i].green * 0xffff;
-			color_out->blue = labeler->palette[i].blue * 0xffff;
+			color_out->red = labeler->priv->palette[i].red * 0xffff;
+			color_out->green = labeler->priv->palette[i].green * 0xffff;
+			color_out->blue = labeler->priv->palette[i].blue * 0xffff;
 #else
-			*color_out = labeler->palette[i];
+			*color_out = labeler->priv->palette[i];
 #endif
 			return;
 		}

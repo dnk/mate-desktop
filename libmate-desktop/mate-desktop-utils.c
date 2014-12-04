@@ -459,7 +459,7 @@ mate_desktop_gtk_style_get_light_color (GtkStyleContext *style,
                                         GtkStateFlags    state,
                                         GdkRGBA         *color)
 {
-	GdkRGBA *c;
+	GdkRGBA *c = NULL;
 	gtk_style_context_get (style, state, GTK_STYLE_PROPERTY_BACKGROUND_COLOR, &c, NULL);
 	gtk_style_shade (c, color, LIGHTNESS_MULT);
 	gdk_rgba_free (c);
@@ -470,7 +470,7 @@ mate_desktop_gtk_style_get_dark_color (GtkStyleContext *style,
                                        GtkStateFlags    state,
                                        GdkRGBA         *color)
 {
-	GdkRGBA *c;
+	GdkRGBA *c = NULL;
 	gtk_style_context_get (style, state, GTK_STYLE_PROPERTY_BACKGROUND_COLOR, &c, NULL);
 	gtk_style_shade (c, color, DARKNESS_MULT);
 	gdk_rgba_free (c);
