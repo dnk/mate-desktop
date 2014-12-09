@@ -139,15 +139,14 @@ INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 if HAVE_INTROSPECTION
+
 if USE_GTK3
 MateDesktop-2.0.gir: libmate-desktop-3.la
-MateDesktop_2_0_gir_INCLUDES = GObject-2.0 Gtk-$(GTK_API_VERSION)
-MateDesktop_2_0_gir_PACKAGES = gdk-pixbuf-2.0 glib-2.0 gobject-2.0 gio-2.0 gtk+-$(GTK_API_VERSION)
 else
 MateDesktop-2.0.gir: libmate-desktop-2.la
-MateDesktop_2_0_gir_INCLUDES = GObject-2.0 Gtk-$(GTK_API_VERSION) GConf-2.0
-MateDesktop_2_0_gir_PACKAGES = gdk-pixbuf-2.0 glib-2.0 gobject-2.0 gio-2.0 gtk+-$(GTK_API_VERSION) gconf-2.0
 endif
+MateDesktop_2_0_gir_INCLUDES = GObject-2.0 Gtk-$(GTK_API_VERSION)
+MateDesktop_2_0_gir_PACKAGES = gdk-pixbuf-2.0 glib-2.0 gobject-2.0 gio-2.0 gtk+-$(GTK_API_VERSION)
 MateDesktop_2_0_gir_CFLAGS = -DMATE_DESKTOP_USE_UNSTABLE_API -I$(top_srcdir)
 if USE_GTK3
 MateDesktop_2_0_gir_LIBS = libmate-desktop-3.la
