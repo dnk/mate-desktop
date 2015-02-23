@@ -85,18 +85,33 @@ gboolean   mate_color_selection_get_has_palette         (MateColorSelection *col
 void       mate_color_selection_set_has_palette         (MateColorSelection *colorsel,
 							gboolean           has_palette);
 
-
+#if GTK_CHECK_VERSION (3, 0, 0)
+void     mate_color_selection_set_current_rgba   (MateColorSelection *colorsel,
+						  const GdkRGBA       *color);
+#endif
 void     mate_color_selection_set_current_color   (MateColorSelection *colorsel,
 						  const GdkColor    *color);
 void     mate_color_selection_set_current_alpha   (MateColorSelection *colorsel,
 						  guint16            alpha);
+#if GTK_CHECK_VERSION (3, 0, 0)
+void     mate_color_selection_get_current_rgba    (MateColorSelection *colorsel,
+						   GdkRGBA            *color);
+#endif
 void     mate_color_selection_get_current_color   (MateColorSelection *colorsel,
 						  GdkColor          *color);
 guint16  mate_color_selection_get_current_alpha   (MateColorSelection *colorsel);
+#if GTK_CHECK_VERSION (3, 0, 0)
+void     mate_color_selection_set_previous_rgba   (MateColorSelection *colorsel,
+						   const GdkRGBA      *color);
+#endif
 void     mate_color_selection_set_previous_color  (MateColorSelection *colorsel,
 						  const GdkColor    *color);
 void     mate_color_selection_set_previous_alpha  (MateColorSelection *colorsel,
 						  guint16            alpha);
+#if GTK_CHECK_VERSION (3, 0, 0)
+void     mate_color_selection_get_previous_rgba   (MateColorSelection *colorsel,
+						   GdkRGBA            *color);
+#endif
 void     mate_color_selection_get_previous_color  (MateColorSelection *colorsel,
 						  GdkColor          *color);
 guint16  mate_color_selection_get_previous_alpha  (MateColorSelection *colorsel);

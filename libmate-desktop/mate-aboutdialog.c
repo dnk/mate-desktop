@@ -837,7 +837,8 @@ mate_about_dialog_show (GtkWidget *widget)
  * Return value: The program name. The string is owned by the about
  *  dialog and must not be modified.
  *
- * Since: 1.9 */
+ * Since: 1.9
+ */
 const gchar *
 mate_about_dialog_get_program_name (MateAboutDialog *about)
 {
@@ -982,7 +983,7 @@ mate_about_dialog_get_copyright (MateAboutDialog *about)
 /**
  * mate_about_dialog_set_copyright:
  * @about: a #MateAboutDialog
- * @copyright: (allow-none) the copyright string
+ * @copyright: (allow-none): the copyright string
  *
  * Sets the copyright string to display in the about dialog.
  * This should be a short string of one or two lines.
