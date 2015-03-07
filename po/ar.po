@@ -3,21 +3,24 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# ANIS El Achèche <elachecheanis@gmail.com>, 2012
-# ANIS El Achèche <elachecheanis@gmail.com>, 2012
-# كريم أولاد الشلحة <herr.linux88@gmail.com>, 2013
-# moceap <moceap@hotmail.com>, 2013-2014
+# alibacha19 <alibacha19@gmail.com>, 2015
+# elachecheanis <elachecheanis@gmail.com>, 2012
+# elachecheanis <elachecheanis@gmail.com>, 2012
+# Karim Oulad Chalha <herr.linux88@gmail.com>, 2013
+# مهدي السطيفي <chinoune.mehdi@gmail.com>, 2014
+# Mosaab Alzoubi <moceap@hotmail.com>, 2013-2014
 # noureddin <noureddin@barid.com>, 2012
 # noureddin <noureddin@barid.com>, 2012
-# sarhantn <sarhanaissi@gmail.com>, 2013
-# sarhantn <sarhanaissi@gmail.com>, 2013
+# Tux-Tn <sarhanaissi@gmail.com>, 2013
+# Tux-Tn <sarhanaissi@gmail.com>, 2013
+# مهدي السطيفي <chinoune.mehdi@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: MATE Desktop Environment\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-05-14 19:55+0200\n"
-"PO-Revision-Date: 2014-05-14 17:58+0000\n"
-"Last-Translator: Stefano Karapetsas <stefano@karapetsas.com>\n"
+"PO-Revision-Date: 2015-02-14 16:35+0000\n"
+"Last-Translator: مهدي السطيفي <chinoune.mehdi@gmail.com>\n"
 "Language-Team: Arabic (http://www.transifex.com/projects/p/MATE/language/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -63,7 +66,7 @@ msgid ""
 "code to GNOME since it was started in 1997; many more have contributed in "
 "other important ways, including translations, documentation, and quality "
 "assurance."
-msgstr "سطح المكتب متّة هو استمرارية لجنوم 2. مئات الأشخاص ساهموا في كتابة جنوم منذ انطلاقتها في 1997 ، و كثرٌ أخرون ساهموا بطرق أخرى لا تقلّ أهمية ، كالترجمة و التوثيق و اختبارات الجودة."
+msgstr "متّة هي استمرارية لغنوم 2. مئات الأشخاص ساهموا في كتابة غنوم منذ انطلاقتها في 1997 ، و و آخرون كُثُر ساهموا بطرق أخرى لا تقلّ أهمية ، بما فيها الترجمة و التوثيق و اختبارات الجودة."
 
 #: ../mate-about/mate-about.h:59
 msgid ""
@@ -88,7 +91,7 @@ msgstr "مجهولة"
 
 #: ../libmate-desktop/mate-aboutdialog.c:184
 msgid "Could not show link"
-msgstr ""
+msgstr "لا يُمكن عرض الرابط"
 
 #: ../libmate-desktop/mate-aboutdialog.c:240
 msgid "Program name"
@@ -98,7 +101,7 @@ msgstr "اسم البرنامج"
 msgid ""
 "The name of the program. If this is not set, it defaults to "
 "g_get_application_name()"
-msgstr ""
+msgstr "اسم البرنامج. إذا لم يتم تحديده ، فسيحدد إفتراضيا على g_get_application_name()"
 
 #: ../libmate-desktop/mate-aboutdialog.c:255
 msgid "Program version"
@@ -106,23 +109,23 @@ msgstr "إصدار البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:256
 msgid "The version of the program"
-msgstr ""
+msgstr "إصدارة البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:270
 msgid "Copyright string"
-msgstr ""
+msgstr "نصّ حقوق النشر"
 
 #: ../libmate-desktop/mate-aboutdialog.c:271
 msgid "Copyright information for the program"
-msgstr ""
+msgstr "معلومات حقوق النشر للبرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:288
 msgid "Comments string"
-msgstr ""
+msgstr "نصّ التعليقات"
 
 #: ../libmate-desktop/mate-aboutdialog.c:289
 msgid "Comments about the program"
-msgstr ""
+msgstr "تعليقات عن البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:307
 #: ../libmate-desktop/mate-aboutdialog.c:2164
@@ -131,25 +134,25 @@ msgstr "الرّخصة"
 
 #: ../libmate-desktop/mate-aboutdialog.c:308
 msgid "The license of the program"
-msgstr ""
+msgstr "ترخيص البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:323
 msgid "Website URL"
-msgstr ""
+msgstr "رابط الموقع"
 
 #: ../libmate-desktop/mate-aboutdialog.c:324
 msgid "The URL for the link to the website of the program"
-msgstr ""
+msgstr "رابط موقع البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:339
 msgid "Website label"
-msgstr ""
+msgstr "تسمية الموقع"
 
 #: ../libmate-desktop/mate-aboutdialog.c:340
 msgid ""
 "The label for the link to the website of the program. If this is not set, it"
 " defaults to the URL"
-msgstr ""
+msgstr "تسمية وصلة لموقع البرنامج. إذا لم يتم تعيينه، فإنه يأخذ  URL افتراضيا  "
 
 #: ../libmate-desktop/mate-aboutdialog.c:356
 msgid "Authors"
@@ -157,7 +160,7 @@ msgstr "المؤلّفون"
 
 #: ../libmate-desktop/mate-aboutdialog.c:357
 msgid "List of authors of the program"
-msgstr ""
+msgstr "قائمة مؤلّفي البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:373
 msgid "Documenters"
@@ -165,7 +168,7 @@ msgstr "المُوَثِّقون"
 
 #: ../libmate-desktop/mate-aboutdialog.c:374
 msgid "List of people documenting the program"
-msgstr ""
+msgstr "قائمة مُوثِّقي البرنامج"
 
 #: ../libmate-desktop/mate-aboutdialog.c:390
 msgid "Artists"
@@ -173,16 +176,16 @@ msgstr ""
 
 #: ../libmate-desktop/mate-aboutdialog.c:391
 msgid "List of people who have contributed artwork to the program"
-msgstr ""
+msgstr "قائمة الأشخاص الذين ساهموا في برنامج العمل"
 
 #: ../libmate-desktop/mate-aboutdialog.c:408
 msgid "Translator credits"
-msgstr ""
+msgstr "شكْر للمترجمين"
 
 #: ../libmate-desktop/mate-aboutdialog.c:409
 msgid ""
 "Credits to the translators. This string should be marked as translatable"
-msgstr ""
+msgstr "شكْر للمترجمين. يجب تعليم هذا النصّ على أنه قابل للترجمة"
 
 #: ../libmate-desktop/mate-aboutdialog.c:424
 msgid "Logo"
@@ -196,11 +199,11 @@ msgstr ""
 
 #: ../libmate-desktop/mate-aboutdialog.c:440
 msgid "Logo Icon Name"
-msgstr ""
+msgstr "شعار اسم اﻷيقونة"
 
 #: ../libmate-desktop/mate-aboutdialog.c:441
 msgid "A named icon to use as the logo for the about box."
-msgstr ""
+msgstr "أيقونة مختارة لتُستعمل شعارا  لصندوق \"عن\""
 
 #: ../libmate-desktop/mate-aboutdialog.c:454
 msgid "Wrap license"
@@ -213,21 +216,21 @@ msgstr ""
 #. Add the credits button
 #: ../libmate-desktop/mate-aboutdialog.c:547
 msgid "C_redits"
-msgstr ""
+msgstr "_شكْر"
 
 #. Add the license button
 #: ../libmate-desktop/mate-aboutdialog.c:561
 msgid "_License"
-msgstr ""
+msgstr "_ترخيص"
 
 #: ../libmate-desktop/mate-aboutdialog.c:841
 #, c-format
 msgid "About %s"
-msgstr ""
+msgstr "عنْ %s"
 
 #: ../libmate-desktop/mate-aboutdialog.c:2088
 msgid "Credits"
-msgstr ""
+msgstr "شكْر"
 
 #: ../libmate-desktop/mate-aboutdialog.c:2116
 msgid "Written by"
@@ -243,11 +246,11 @@ msgstr "تَرجَمَهُ"
 
 #: ../libmate-desktop/mate-aboutdialog.c:2135
 msgid "Artwork by"
-msgstr ""
+msgstr "عمل فني من قبل"
 
 #: ../libmate-desktop/mate-colorbutton.c:154
 msgid "Use alpha"
-msgstr ""
+msgstr "استخدام ألفا"
 
 #: ../libmate-desktop/mate-colorbutton.c:155
 msgid "Whether or not to give the color an alpha value"
@@ -255,25 +258,25 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorbutton.c:169
 msgid "Title"
-msgstr ""
+msgstr "العنوان"
 
 #: ../libmate-desktop/mate-colorbutton.c:170
 msgid "The title of the color selection dialog"
-msgstr ""
+msgstr "عنوان حوار انتقاء الألوان"
 
 #: ../libmate-desktop/mate-colorbutton.c:171
 #: ../libmate-desktop/mate-colorbutton.c:470
 msgid "Pick a Color"
-msgstr ""
+msgstr "اختر لونًا"
 
 #: ../libmate-desktop/mate-colorbutton.c:184
 #: ../libmate-desktop/mate-colorsel.c:337
 msgid "Current Color"
-msgstr ""
+msgstr "اللون الحالي"
 
 #: ../libmate-desktop/mate-colorbutton.c:185
 msgid "The selected color"
-msgstr ""
+msgstr "اللون المحدّد"
 
 #: ../libmate-desktop/mate-colorbutton.c:199
 #: ../libmate-desktop/mate-colorsel.c:344
@@ -286,7 +289,7 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorbutton.c:356
 msgid "Received invalid color data\n"
-msgstr ""
+msgstr "تمّ تلقي بيانات لون غير سليمة\n"
 
 #: ../libmate-desktop/mate-colorsel.c:323
 msgid "Has Opacity Control"
@@ -306,11 +309,11 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorsel.c:338
 msgid "The current color"
-msgstr ""
+msgstr "اللون الحالي"
 
 #: ../libmate-desktop/mate-colorsel.c:345
 msgid "The current opacity value (0 fully transparent, 65535 fully opaque)"
-msgstr ""
+msgstr "قيمة التعتيم الحالية (0 شفافة كليا, 65535 عاتمة كليا)"
 
 #: ../libmate-desktop/mate-colorsel.c:398
 msgid ""
@@ -326,7 +329,7 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorsel.c:431
 msgid "_Hue:"
-msgstr ""
+msgstr "-صِبْغَة:"
 
 #: ../libmate-desktop/mate-colorsel.c:432
 msgid "Position on the color wheel."
@@ -334,93 +337,93 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorsel.c:434
 msgid "_Saturation:"
-msgstr ""
+msgstr "التشبع"
 
 #: ../libmate-desktop/mate-colorsel.c:435
 msgid "\"Deepness\" of the color."
-msgstr ""
+msgstr "\"كمية الضوء الأحمر\" لهذا اللون."
 
 #: ../libmate-desktop/mate-colorsel.c:436
 msgid "_Value:"
-msgstr ""
+msgstr "ال_قيمة:"
 
 #: ../libmate-desktop/mate-colorsel.c:437
 msgid "Brightness of the color."
-msgstr ""
+msgstr "لمعان اللون"
 
 #: ../libmate-desktop/mate-colorsel.c:438
 msgid "_Red:"
-msgstr ""
+msgstr "_أحمر"
 
 #: ../libmate-desktop/mate-colorsel.c:439
 msgid "Amount of red light in the color."
-msgstr ""
+msgstr "كمية الضوء اﻷحمر في اللون"
 
 #: ../libmate-desktop/mate-colorsel.c:440
 msgid "_Green:"
-msgstr ""
+msgstr "_أخضر"
 
 #: ../libmate-desktop/mate-colorsel.c:441
 msgid "Amount of green light in the color."
-msgstr ""
+msgstr "كمية الضوء اﻷخضر في اللون"
 
 #: ../libmate-desktop/mate-colorsel.c:442
 msgid "_Blue:"
-msgstr ""
+msgstr "_أزرق"
 
 #: ../libmate-desktop/mate-colorsel.c:443
 msgid "Amount of blue light in the color."
-msgstr ""
+msgstr "كمية الضوء اﻷزرق في اللون"
 
 #: ../libmate-desktop/mate-colorsel.c:446
 msgid "Op_acity:"
-msgstr ""
+msgstr "الت_عتيم"
 
 #: ../libmate-desktop/mate-colorsel.c:453
 #: ../libmate-desktop/mate-colorsel.c:463
 msgid "Transparency of the color."
-msgstr ""
+msgstr "شفافيّة اللون"
 
 #: ../libmate-desktop/mate-colorsel.c:470
 msgid "Color _name:"
-msgstr ""
+msgstr "ا_سم اللون:"
 
 #: ../libmate-desktop/mate-colorsel.c:484
 msgid ""
 "You can enter an HTML-style hexadecimal color value, or simply a color name "
 "such as 'orange' in this entry."
-msgstr ""
+msgstr "يمكنك إدخال نمط HTML قيمة اللون عشري، أو مجرد اسم اللون مثل \"البرتقالي\" في هذا الإدخال."
 
 #: ../libmate-desktop/mate-colorsel.c:514
 msgid "_Palette:"
-msgstr ""
+msgstr "ال_لوحة:"
 
 #: ../libmate-desktop/mate-colorsel.c:543
 msgid "Color Wheel"
-msgstr ""
+msgstr "قرص اﻷلوان"
 
 #: ../libmate-desktop/mate-colorsel.c:1057
 msgid ""
 "The previously-selected color, for comparison to the color you're selecting "
 "now. You can drag this color to a palette entry, or select this color as "
 "current by dragging it to the other color swatch alongside."
-msgstr ""
+msgstr "مقارنة اللون المحدد سابقا مع اللون الذي تختاره الآن. يمكنك سحب هذا اللون إلى مدخل اللوحة، أو حدد اللون الحالي عن طريق سحبه إلى حامل ألوان آخرين جنبا إلى جنب."
 
 #: ../libmate-desktop/mate-colorsel.c:1060
 msgid ""
 "The color you've chosen. You can drag this color to a palette entry to save "
 "it for use in the future."
-msgstr ""
+msgstr "اللون الذي اخترته. يمكنك سحبه  إلى مدخل اللوح لحفظه و أستخدامه في المستقبل."
 
 #: ../libmate-desktop/mate-colorsel.c:1065
 msgid ""
 "The previously-selected color, for comparison to the color you're selecting "
 "now."
-msgstr ""
+msgstr "اللون المحدد سابقا، مقارنة باللون الذي أخترته الآن."
 
 #: ../libmate-desktop/mate-colorsel.c:1068
 msgid "The color you've chosen."
-msgstr ""
+msgstr "اللون الذي اخترته"
 
 #: ../libmate-desktop/mate-colorsel.c:1514
 msgid "gtk-color-sel"
@@ -428,18 +431,18 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorsel.c:1519
 msgid "_Save color here"
-msgstr ""
+msgstr "_حفظ الون اﻵن"
 
 #: ../libmate-desktop/mate-colorsel.c:1749
 msgid ""
 "Click this palette entry to make it the current color. To change this entry,"
 " drag a color swatch here or right-click it and select \"Save color here.\""
-msgstr ""
+msgstr "انقر فوق لوحة الإدخال للحصول على اللون الحالي. لتغيير هذا الإدخال، اسحب حامل اللون هنا أو أنقر بزر الماوس الأيمن فوقه وحدد \"حفظ اللون هنا.\""
 
 #: ../libmate-desktop/mate-colorseldialog.c:99
 #: ../libmate-desktop/mate-colorseldialog.c:168
 msgid "Color Selection"
-msgstr ""
+msgstr "اختيار اﻷلوان"
 
 #: ../libmate-desktop/mate-colorseldialog.c:100
 msgid "The color selection embedded in the dialog."
@@ -447,27 +450,27 @@ msgstr ""
 
 #: ../libmate-desktop/mate-colorseldialog.c:106
 msgid "OK Button"
-msgstr ""
+msgstr "زر الموافقة"
 
 #: ../libmate-desktop/mate-colorseldialog.c:107
 msgid "The OK button of the dialog."
-msgstr ""
+msgstr "زر موافق لمربع الحوار."
 
 #: ../libmate-desktop/mate-colorseldialog.c:113
 msgid "Cancel Button"
-msgstr ""
+msgstr "زر اﻹلغاء"
 
 #: ../libmate-desktop/mate-colorseldialog.c:114
 msgid "The cancel button of the dialog."
-msgstr ""
+msgstr "زر الغاء الامر لمربع الحوار."
 
 #: ../libmate-desktop/mate-colorseldialog.c:120
 msgid "Help Button"
-msgstr ""
+msgstr "زر المساعدة"
 
 #: ../libmate-desktop/mate-colorseldialog.c:121
 msgid "The help button of the dialog."
-msgstr ""
+msgstr "زر المساعد لمربع الحوار."
 
 #: ../libmate-desktop/mate-desktop-item.c:220
 #, c-format
@@ -858,13 +861,13 @@ msgstr "اترك كاجا ليرسم رموز سطح المكتب."
 
 #: ../schemas/org.mate.background.gschema.xml.in.in.h:5
 msgid "Fade the background on change"
-msgstr ""
+msgstr "تتضاءل الخلفية لما نغير"
 
 #: ../schemas/org.mate.background.gschema.xml.in.in.h:6
 msgid ""
 "If set to true, then MATE will change the desktop background with a fading "
 "effect."
-msgstr ""
+msgstr "إذا جعلنا ص،  بعدها MATE سيغير خلفية سطح المكتب مع وجود تأثير التلاشي."
 
 #: ../schemas/org.mate.background.gschema.xml.in.in.h:7
 msgid "Picture Options"
@@ -1159,7 +1162,7 @@ msgstr "إذا ما كانت قوائم سياق المدخلات وعرض ال�
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:55
 msgid "Titlebar layout of GTK3 client-side decorated windows"
-msgstr ""
+msgstr "ترتيب شريط العنوان من جانب العميلGTK3 زين النوافذ"
 
 #: ../schemas/org.mate.interface.gschema.xml.in.in.h:56
 msgid ""
@@ -1168,7 +1171,7 @@ msgid ""
 " of right. See "
 "https://developer.gnome.org/gtk3/stable/GtkSettings.html#GtkSettings--gtk-"
 "decoration-layout."
-msgstr ""
+msgstr "هذه الاعدادات تحدد  الأزرار التي ينبغي أن توضع في شريط العنوان جنب العميل نوافذ مزخرفة  ، وأنها يجب أن توضع على يسار أو اليمين. انظر https://developer.gnome.org/gtk3/stable/GtkSettings.html#GtkSettings--gtk-decoration-layout."
 
 #: ../schemas/org.mate.lockdown.gschema.xml.in.in.h:1
 msgid "Disable command line"
@@ -1227,7 +1230,7 @@ msgstr "عطّل قفل الشاشة"
 
 #: ../schemas/org.mate.lockdown.gschema.xml.in.in.h:12
 msgid "Prevent the user from locking the screen."
-msgstr ""
+msgstr "منع المستخدم من قفل الشاشة"
 
 #: ../schemas/org.mate.lockdown.gschema.xml.in.in.h:13
 msgid "Disable URL and MIME type handlers"
@@ -1239,11 +1242,11 @@ msgstr "يمنع تشغيل أي تطبيق مداول النوعين رابط �
 
 #: ../schemas/org.mate.lockdown.gschema.xml.in.in.h:15
 msgid "Disable theme settings"
-msgstr ""
+msgstr "إيقاف إعدادات السمة"
 
 #: ../schemas/org.mate.lockdown.gschema.xml.in.in.h:16
 msgid "Prevent the user from changing theme settings."
-msgstr ""
+msgstr "منع المستخدم من تغيير إعداداته"
 
 #: ../schemas/org.mate.peripherals-keyboard.gschema.xml.in.in.h:1
 msgid "possible values are \"on\", \"off\", and \"custom\"."
@@ -1325,13 +1328,13 @@ msgstr "مدة النقر المزدوج."
 
 #: ../schemas/org.mate.peripherals-mouse.gschema.xml.in.in.h:12
 msgid "Middle button emulation"
-msgstr ""
+msgstr "محاكاة الزر الأوسط"
 
 #: ../schemas/org.mate.peripherals-mouse.gschema.xml.in.in.h:13
 msgid ""
 "Enables middle mouse button emulation through simultaneous left and right "
 "button click."
-msgstr ""
+msgstr "تفعيل محاكاة الزر اﻷوسط عبر النقر على الزرين اﻷيمن و اﻷيسر في آن واحد"
 
 #: ../schemas/org.mate.peripherals-mouse.gschema.xml.in.in.h:14
 msgid "Locate Pointer"
@@ -1488,20 +1491,20 @@ msgstr "فيما إذا كان قفل لوحة المفاتيح مفعّلا أ�
 #: ../tools/mate-color-select.c:46 ../tools/mate-color-select.c:49
 #: ../tools/mate-color-select.desktop.in.in.h:1
 msgid "MATE Color Selection"
-msgstr ""
+msgstr "تحديد لون متّة"
 
 #: ../tools/mate-color-select.desktop.in.in.h:2
 msgid "Color selection dialog"
-msgstr ""
+msgstr "إطار اختيار اللون"
 
 #: ../tools/mate-color-select.desktop.in.in.h:3
 msgid "Choose colors from the palette or the screen"
-msgstr ""
+msgstr "إختر لونا من لوحة أو شاشة اﻷلوان"
 
 #: ../tools/mate-conf-import.desktop.in.in.h:1
 msgid "Migrate MATE 1.4 settings"
-msgstr ""
+msgstr "نقل إعدادات متّة 1.4"
 
 #: ../tools/mate-conf-import.desktop.in.in.h:2
 msgid "Tool to migrate MATE 1.4 settings to MATE 1.6"
-msgstr ""
+msgstr "أداة لنقل إعدادات متّة 1.4 إلى متّة 1.6"

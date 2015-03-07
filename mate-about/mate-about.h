@@ -37,7 +37,7 @@ const char* website = "http://www.mate-desktop.org/";
 const char* copyright =  ""
     "Copyright © 1997-2011 GNOME developers\n"
     "Copyright © 2011 Perberos\n"
-    "Copyright © 2012-2014 MATE developers";
+    "Copyright © 2012-2015 MATE developers";
 
 /* Increment comments_count if you add other comments. This will be
  * used to choose a random comment. */
@@ -92,11 +92,14 @@ const char* authors[] = {
     "Mike Gabriel <sunweaver@debian.org>",
     "Willy Sudiarto Raharjo <willysr@slackware-id.org>",
     "Chess Griffin <chess.griffin@gmail.com>",
+    "Vlad Orlov <monsta@inbox.ru>",
+    "Abel McClendon <hcmmac@hosscomm.com>",
     /* MATE Google Summer of Code students */
     "Alexander van der Meij <alexandervdm@gliese.me>",
     "Avishkar Gupta <avishkar_gupta@outlook.com>",
     "Laszlo Boros <iamsemmu@gmail.com>",
     "Michal Ratajsky <michal.ratajsky@gmail.com>",
+    "",
     /* GNOME developers */
     "GNOME:",
     "Jérôme Abela",
