@@ -1,6 +1,6 @@
 m4_define([mate_platform], [1])
 m4_define([mate_minor], [10])
-m4_define([mate_micro], [0])
+m4_define([mate_micro], [1])
 
 m4_define(mate_version, [mate_platform.mate_minor.mate_micro]),
 
@@ -77,9 +77,17 @@ fi
 # Should we build mate-about? Useful for people who need to build
 # two mate-desktop using two different versions of GTK+
 AC_ARG_ENABLE([mate-about],
-	[AS_HELP_STRING([--disable-mate-about],[dont build mate-about])],,
+	[AS_HELP_STRING([--disable-mate-about],[do not build mate-about])],,
 	[enable_mate_about=yes])
 AM_CONDITIONAL(MATE_ABOUT_ENABLED, test "x$enable_mate_about" = "xyes")
+
+
+# Should we build the docbook user-guide? Will be useful until
+# the new mallard mate-user-guide is complete and translated
+AC_ARG_ENABLE([user-guide],
+	[AS_HELP_STRING([--disable-user-guide],[do not build user guide])],,
+	[enable_user_guide=yes])
+AM_CONDITIONAL(USER_GUIDE_ENABLED, test "x$enable_user_guide" = "xyes")
 
 
 # Install tool to migrate 1.4 MateConf settings
@@ -308,6 +316,8 @@ man/Makefile
 tools/mate-color-select.desktop.in
 tools/mate-conf-import.desktop.in
 tools/Makefile
+user-guide/Makefile
+user-guide/mate-user-guide.desktop.in
 ])
 
 AC_OUTPUT
@@ -336,6 +346,7 @@ mate-desktop $VERSION
 
     Gtk+ version:                 ${GTK_API_VERSION}
     Build mate-about:             ${enable_mate_about}
+    Build user guide:             ${enable_user_guide}
     Install mate-conf-import:     ${enable_mate_conf_import}
     Install mpaste:               ${enable_mpaste}
     Use external pnp.ids:         ${EXTERNAL_PNP_IDS}
