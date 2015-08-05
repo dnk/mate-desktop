@@ -519,6 +519,17 @@ setup_from_config (MateRRLabeler *labeler)
 	create_label_windows (labeler);
 }
 
+/**
+ * mate_rr_labeler_new:
+ * @config: Configuration of the screens to label
+ *
+ * Create a GUI element that will display colored labels on each connected monitor.
+ * This is useful when users are required to identify which monitor is which, e.g. for
+ * for configuring multiple monitors.
+ * The labels will be shown by default, use mate_rr_labeler_hide to hide them.
+ *
+ * Returns: A new #GnomeRRLabeler
+ */
 MateRRLabeler *
 mate_rr_labeler_new (MateRRConfig *config)
 {
@@ -527,6 +538,12 @@ mate_rr_labeler_new (MateRRConfig *config)
 	return g_object_new (MATE_TYPE_RR_LABELER, "config", config, NULL);
 }
 
+/**
+ * mate_rr_labeler_hide:
+ * @labeler: A #MateRRLabeler
+ *
+ * Hide ouput labels.
+ */
 void
 mate_rr_labeler_hide (MateRRLabeler *labeler)
 {
@@ -550,6 +567,14 @@ mate_rr_labeler_hide (MateRRLabeler *labeler)
 }
 
 #if GTK_CHECK_VERSION (3, 0, 0)
+/**
+ * mate_rr_labeler_get_rgba_for_output:
+ * @labeler: A #MateRRLabeler
+ * @output: Output device (i.e. monitor) to query
+ * @rgba_out: (out): Color of selected monitor.
+ *
+ * Get the color used for the label on a given output (monitor).
+ */
 void
 mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateRROutputInfo *output, GdkRGBA *color_out)
 {
@@ -577,6 +602,14 @@ mate_rr_labeler_get_rgba_for_output (MateRRLabeler *labeler, MateRROutputInfo *o
 }
 #endif
 
+/**
+ * mate_rr_labeler_get_color_for_output:
+ * @labeler: A #MateRRLabeler
+ * @output: Output device (i.e. monitor) to query
+ * @color_out: (out): Color of selected monitor.
+ *
+ * Get the color used for the label on a given output (monitor).
+ */
 void
 mate_rr_labeler_get_color_for_output (MateRRLabeler *labeler, MateRROutputInfo *output, GdkColor *color_out)
 {

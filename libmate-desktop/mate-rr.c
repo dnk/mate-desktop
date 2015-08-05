@@ -850,10 +850,10 @@ mate_rr_screen_init (MateRRScreen *self)
 
 /**
  * mate_rr_screen_new:
- * Creates a new #MateRRScreen instance
- *
  * @screen: the #GdkScreen on which to operate
  * @error: will be set if XRandR is not supported
+ *
+ * Creates a new #MateRRScreen instance
  *
  * Returns: a new #MateRRScreen instance or NULL if screen could not be created,
  * for instance if the driver does not support Xrandr 1.2
@@ -890,13 +890,13 @@ mate_rr_screen_set_size (MateRRScreen *screen,
 
 /**
  * mate_rr_screen_get_ranges:
- *
- * Get the ranges of the screen
  * @screen: a #MateRRScreen
  * @min_width: (out): the minimum width
  * @max_width: (out): the maximum width
  * @min_height: (out): the minimum height
  * @max_height: (out): the maximum height
+ *
+ * Get the ranges of the screen
  */
 void
 mate_rr_screen_get_ranges (MateRRScreen *screen,
@@ -1427,7 +1427,7 @@ mate_rr_output_get_edid_data (MateRROutput *output)
 }
 
 /**
- * mate_rr_screen_get_output_by_id:
+ * mate_rr_screen_get_output_by_name:
  *
  * Returns: (transfer none): the output identified by @name
  */
@@ -1492,7 +1492,8 @@ mate_rr_output_is_laptop (MateRROutput *output)
 	&& (strstr (output->name, "lvds") ||  /* Most drivers use an "LVDS" prefix... */
 	    strstr (output->name, "LVDS") ||
 	    strstr (output->name, "Lvds") ||
-	    strstr (output->name, "LCD")))    /* ... but fglrx uses "LCD" in some versions.  Shoot me now, kthxbye. */
+	    strstr (output->name, "LCD")  ||  /* ... but fglrx uses "LCD" in some versions.  Shoot me now, kthxbye. */
+	    strstr (output->name, "eDP")))    /* eDP is for internal laptop panel connections */
 	return TRUE;
 
     return FALSE;
@@ -1750,7 +1751,8 @@ mate_rr_crtc_set_config_with_time (MateRRCrtc      *crtc,
 	for (i = 0; i < n_outputs; ++i)
 	    g_array_append_val (output_ids, outputs[i]->id);
     }
-    
+
+    gdk_error_trap_push ();
     status = XRRSetCrtcConfig (DISPLAY (crtc), info->resources, crtc->id,
 			       timestamp, 
 			       x, y,
@@ -1761,16 +1763,16 @@ mate_rr_crtc_set_config_with_time (MateRRCrtc      *crtc,
     
     g_array_free (output_ids, TRUE);
 
-    if (status == RRSetConfigSuccess)
-	result = TRUE;
-    else {
-	result = FALSE;
-	/* Translators: CRTC is a CRT Controller (this is X terminology).
-	 * It is *very* unlikely that you'll ever get this error, so it is
-	 * only listed for completeness. */
-	g_set_error (error, MATE_RR_ERROR, MATE_RR_ERROR_RANDR_ERROR,
-		     _("could not set the configuration for CRTC %d"),
-		     (int) crtc->id);
+    if (gdk_error_trap_pop () || status != RRSetConfigSuccess) {
+        /* Translators: CRTC is a CRT Controller (this is X terminology).
+         * It is *very* unlikely that you'll ever get this error, so it is
+         * only listed for completeness. */
+        g_set_error (error, MATE_RR_ERROR, MATE_RR_ERROR_RANDR_ERROR,
+                     _("could not set the configuration for CRTC %d"),
+                     (int) crtc->id);
+        return FALSE;
+    } else {
+        result = TRUE;
     }
     
     return result;

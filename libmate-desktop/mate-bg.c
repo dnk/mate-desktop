@@ -1377,7 +1377,7 @@ mate_bg_get_pixmap_size (MateBG   *bg,
  * @window:
  * @width:
  * @height:
- * @is_root:
+ * @root:
  *
  * Create a surface that can be set as background for @window. If @is_root is
  * TRUE, the surface created will be created by a temporary X server connection
@@ -1394,7 +1394,7 @@ mate_bg_create_pixmap  (MateBG      *bg,
 		 	GdkWindow   *window,
 			int	     width,
 			int	     height,
-			gboolean     is_root)
+			gboolean     root)
 {
 	int pm_width, pm_height;
 
@@ -1415,7 +1415,7 @@ mate_bg_create_pixmap  (MateBG      *bg,
 	mate_bg_get_pixmap_size (bg, width, height, &pm_width, &pm_height);
 
 
-	if (is_root)
+	if (root)
 	{
 		surface = make_root_pixmap (window, pm_width, pm_height);
 	}
@@ -1446,7 +1446,7 @@ mate_bg_create_pixmap  (MateBG      *bg,
 
 		pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, FALSE, 8,
 					 width, height);
-		mate_bg_draw (bg, pixbuf, gdk_window_get_screen (window), is_root);
+		mate_bg_draw (bg, pixbuf, gdk_window_get_screen (window), root);
 		gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
 		g_object_unref (pixbuf);
 #endif
@@ -3168,9 +3168,8 @@ handle_text (GMarkupParseContext *context,
 
 	g_return_if_fail (parser != NULL);
 	g_return_if_fail (parser->slides != NULL);
-	g_return_if_fail (parser->slides->tail != NULL);
 
-	Slide *slide = parser->slides->tail->data;
+	Slide *slide = parser->slides->tail ? parser->slides->tail->data : NULL;
 
 	if (stack_is (parser, "year", "starttime", "background", NULL)) {
 		parser->start_tm.tm_year = parse_int (text) - 1900;
@@ -3192,11 +3191,15 @@ handle_text (GMarkupParseContext *context,
 	}
 	else if (stack_is (parser, "duration", "static", "background", NULL) ||
 		 stack_is (parser, "duration", "transition", "background", NULL)) {
+		g_return_if_fail (slide != NULL);
+
 		slide->duration = g_strtod (text, NULL);
 		parser->total_duration += slide->duration;
 	}
 	else if (stack_is (parser, "file", "static", "background", NULL) ||
 		 stack_is (parser, "from", "transition", "background", NULL)) {
+		g_return_if_fail (slide != NULL);
+
 		for (i = 0; text[i]; i++) {
 			if (!g_ascii_isspace (text[i]))
 				break;
@@ -3213,12 +3216,16 @@ handle_text (GMarkupParseContext *context,
 	}
 	else if (stack_is (parser, "size", "file", "static", "background", NULL) ||
 		 stack_is (parser, "size", "from", "transition", "background", NULL)) {
+		g_return_if_fail (slide != NULL);
+
 		fs = slide->file1->data;
 		fs->file = g_strdup (text);
 		if (slide->file1->next != NULL)
 			parser->has_multiple_sizes = TRUE;
 	}
 	else if (stack_is (parser, "to", "transition", "background", NULL)) {
+		g_return_if_fail (slide != NULL);
+
 		for (i = 0; text[i]; i++) {
 			if (!g_ascii_isspace (text[i]))
 				break;
@@ -3234,6 +3241,8 @@ handle_text (GMarkupParseContext *context,
 			parser->has_multiple_sizes = TRUE;
 	}
 	else if (stack_is (parser, "size", "to", "transition", "background", NULL)) {
+		g_return_if_fail (slide != NULL);
+
 		fs = slide->file2->data;
 		fs->file = g_strdup (text);
 		if (slide->file2->next != NULL)
@@ -3403,7 +3412,7 @@ read_slideshow_file (const char *filename,
 		/* one slide, there's no transition */
 		} else if (len == 1) {
 			Slide *slide = show->slides->head->data;
-			slide->duration = G_MAXUINT;
+			slide->duration = show->total_duration = G_MAXUINT;
 		}
 	}
 
@@ -3506,6 +3515,9 @@ mate_bg_changes_with_time (MateBG *bg)
 	SlideShow *show;
 
 	g_return_val_if_fail (bg != NULL, FALSE);
+
+	if (!bg->filename)
+		return FALSE;
 
 	show = get_as_slideshow (bg, bg->filename);
 	if (show)
