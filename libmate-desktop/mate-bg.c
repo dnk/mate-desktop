@@ -1496,19 +1496,25 @@ mate_bg_is_dark (MateBG *bg,
 		color.red = (color.red * (0xFF - a) + r * 0x101 * a) / 0xFF;
 		color.green = (color.green * (0xFF - a) + g * 0x101 * a) / 0xFF;
 		color.blue = (color.blue * (0xFF - a) + b * 0x101 * a) / 0xFF;
+#if GTK_CHECK_VERSION (3, 0, 0)
+		color.red = color.red / 255.;
+		color.green = color.green / 255.;
+		color.blue = color.blue / 255.;
+#endif
 		g_object_unref (pixbuf);
 	}
 
 #if GTK_CHECK_VERSION(3, 0, 0)
-	// todo
-	intensity = 20;
+	intensity = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue;
+
+	return intensity < 0.627; /* biased slightly to be dark */
 #else
 	intensity = (color.red * 77 +
 		     color.green * 150 +
 		     color.blue * 28) >> 16;
-#endif
 
 	return intensity < 160; /* biased slightly to be dark */
+#endif
 }
 
 /*
