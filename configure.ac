@@ -1,6 +1,6 @@
 m4_define([mate_platform], [1])
 m4_define([mate_minor], [10])
-m4_define([mate_micro], [1])
+m4_define([mate_micro], [2])
 
 m4_define(mate_version, [mate_platform.mate_minor.mate_micro]),
 
@@ -32,10 +32,8 @@ AM_MAINTAINER_MODE
 
 IT_PROG_INTLTOOL([0.40.0])
 
-AC_ISC_POSIX
 AC_PROG_CC
 AC_STDC_HEADERS
-AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 PKG_PROG_PKG_CONFIG
 
@@ -73,6 +71,12 @@ if test "x$enable_deprecation_flags" = "xyes"; then
    DISABLE_DEPRECATED_CFLAGS=$DISABLE_DEPRECATED
    AC_SUBST(DISABLE_DEPRECATED_CFLAGS)
 fi
+
+# GLib min/max required versions
+AC_DEFINE([GLIB_VERSION_MAX_ALLOWED], [GLIB_VERSION_2_36],
+	[Warn on use of APIs added after GLib 2.36])
+AC_DEFINE([GLIB_VERSION_MIN_REQUIRED], [GLIB_VERSION_2_36],
+	[Warn on use of APIs deprecated before GLib 2.36])
 
 # Should we build mate-about? Useful for people who need to build
 # two mate-desktop using two different versions of GTK+
@@ -127,8 +131,6 @@ dnl it too, or it will never make it into the spec file!
 dnl ----------------------------------------------------------------------------
 dnl GTK library version
 dnl ----------------------------------------------------------------------------
-GTK_API_VERSION=2.0
-GTK_REQUIRED=2.24.0
 
 AC_MSG_CHECKING([which gtk+ version to compile against])
 AC_ARG_WITH([gtk],
