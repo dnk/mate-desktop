@@ -1,6 +1,6 @@
 m4_define([mate_platform], [1])
-m4_define([mate_minor], [10])
-m4_define([mate_micro], [2])
+m4_define([mate_minor], [11])
+m4_define([mate_micro], [0])
 
 m4_define(mate_version, [mate_platform.mate_minor.mate_micro]),
 
@@ -156,7 +156,7 @@ AM_CONDITIONAL([USE_GTK3], [test "x$GTK_API_VERSION" = "x3.0"])
 GDK_PIXBUF_REQUIRED=2.4.0
 GLIB_REQUIRED=2.36.0
 GIO_REQUIRED=2.26.0
-XRANDR_REQUIRED=1.2
+XRANDR_REQUIRED=1.3
 
 AC_SUBST(GTK_API_VERSION)
 AC_SUBST(GLIB_REQUIRED)
@@ -168,15 +168,10 @@ dnl ----------------------------------------------------------------------------
 dnl DCONF
 dnl ----------------------------------------------------------------------------
 
-DCONF_NEW_REQUIRED=0.13.4
-DCONF_OLD_REQUIRED=0.10.0
+DCONF_REQUIRED=0.13.4
 
-PKG_CHECK_MODULES([DCONF], [dconf >= $DCONF_NEW_REQUIRED],
-   [AC_DEFINE([HAVE_DCONF_0_13], [1], [Use DCONF >= $DCONF_NEW_REQUIRED])],
-   [PKG_CHECK_MODULES([DCONF], [dconf >= $DCONF_OLD_REQUIRED],
-       [AC_DEFINE([HAVE_DCONF_0_10], [1], [Use DCONF $DCONF_OLD_REQUIRED])
-    ])
-])
+PKG_CHECK_MODULES(DCONF, dconf >= $DCONF_REQUIRED)
+
 AC_SUBST(DCONF_CFLAGS)
 AC_SUBST(DCONF_LIBS)
 

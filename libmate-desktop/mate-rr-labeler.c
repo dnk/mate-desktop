@@ -456,10 +456,13 @@ create_label_window (MateRRLabeler *labeler, MateRROutputInfo *output, GdkColor 
 		 * translation could be "Pantallas en Espejo", *not* "Espejar Pantallas".
 		 */
 		display_name = _("Mirror Screens");
-	} else
-		display_name = mate_rr_output_info_get_display_name (output);
+		str = g_strdup_printf ("<b>%s</b>", display_name);
+	} else {
+		display_name = g_strdup_printf ("<b>%s</b>\n<small>%s</small>", mate_rr_output_info_get_display_name (output), mate_rr_output_info_get_name (output));
+		str = g_strdup_printf ("%s", display_name);
+	}
+	g_free (display_name);
 
-	str = g_strdup_printf ("<b>%s</b>", display_name);
 	widget = gtk_label_new (NULL);
 	gtk_label_set_markup (GTK_LABEL (widget), str);
 	g_free (str);
@@ -528,7 +531,7 @@ setup_from_config (MateRRLabeler *labeler)
  * for configuring multiple monitors.
  * The labels will be shown by default, use mate_rr_labeler_hide to hide them.
  *
- * Returns: A new #GnomeRRLabeler
+ * Returns: A new #MateRRLabeler
  */
 MateRRLabeler *
 mate_rr_labeler_new (MateRRConfig *config)
