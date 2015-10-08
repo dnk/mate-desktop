@@ -30,7 +30,13 @@ AC_SUBST(LT_VERSION)
 
 AM_MAINTAINER_MODE
 
-IT_PROG_INTLTOOL([0.40.0])
+# GLib min/max required versions
+AC_DEFINE([GLIB_VERSION_MAX_ALLOWED], [GLIB_VERSION_2_36],
+	[Warn on use of APIs added after GLib 2.36])
+AC_DEFINE([GLIB_VERSION_MIN_REQUIRED], [GLIB_VERSION_2_36],
+	[Warn on use of APIs deprecated before GLib 2.36])
+
+IT_PROG_INTLTOOL([0.50.1])
 
 AC_PROG_CC
 AC_STDC_HEADERS
@@ -84,14 +90,6 @@ AC_ARG_ENABLE([mate-about],
 	[AS_HELP_STRING([--disable-mate-about],[do not build mate-about])],,
 	[enable_mate_about=yes])
 AM_CONDITIONAL(MATE_ABOUT_ENABLED, test "x$enable_mate_about" = "xyes")
-
-
-# Should we build the docbook user-guide? Will be useful until
-# the new mallard mate-user-guide is complete and translated
-AC_ARG_ENABLE([user-guide],
-	[AS_HELP_STRING([--disable-user-guide],[do not build user guide])],,
-	[enable_user_guide=yes])
-AM_CONDITIONAL(USER_GUIDE_ENABLED, test "x$enable_user_guide" = "xyes")
 
 
 # Install tool to migrate 1.4 MateConf settings
@@ -256,10 +254,6 @@ PKG_CHECK_MODULES(MATE_ABOUT, gtk+-$GTK_API_VERSION >= $GTK_REQUIRED)
 AC_SUBST(MATE_ABOUT_CFLAGS)
 AC_SUBST(MATE_ABOUT_LIBS)
 
-dnl yelp-tools stuff
-
-YELP_HELP_INIT
-
 dnl Language Support
 
 GETTEXT_PACKAGE=mate-desktop
@@ -309,12 +303,29 @@ docs/reference/mate-desktop/Makefile
 mate-version.xml.in
 po/Makefile.in
 schemas/Makefile
+schemas/org.mate.accessibility-keyboard.gschema.xml
+schemas/org.mate.accessibility-startup.gschema.xml
+schemas/org.mate.applications-at-mobility.gschema.xml
+schemas/org.mate.applications-at-visual.gschema.xml
+schemas/org.mate.applications-browser.gschema.xml
+schemas/org.mate.applications-office.gschema.xml
+schemas/org.mate.applications-terminal.gschema.xml
+schemas/org.mate.background.gschema.xml
+schemas/org.mate.debug.gschema.xml
+schemas/org.mate.file-views.gschema.xml
+schemas/org.mate.interface.gschema.xml
+schemas/org.mate.lockdown.gschema.xml
+schemas/org.mate.peripherals-keyboard.gschema.xml
+schemas/org.mate.peripherals-mouse.gschema.xml
+schemas/org.mate.sound.gschema.xml
+schemas/org.mate.thumbnail-cache.gschema.xml
+schemas/org.mate.thumbnailers.gschema.xml
+schemas/org.mate.typing-break.gschema.xml
 man/Makefile
 tools/mate-color-select.desktop.in
 tools/mate-conf-import.desktop.in
 tools/Makefile
-user-guide/Makefile
-user-guide/mate-user-guide.desktop.in
+icons/Makefile
 ])
 
 AC_OUTPUT
@@ -343,7 +354,6 @@ mate-desktop $VERSION
 
     Gtk+ version:                 ${GTK_API_VERSION}
     Build mate-about:             ${enable_mate_about}
-    Build user guide:             ${enable_user_guide}
     Install mate-conf-import:     ${enable_mate_conf_import}
     Install mpaste:               ${enable_mpaste}
     Use external pnp.ids:         ${EXTERNAL_PNP_IDS}
