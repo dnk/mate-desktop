@@ -50,16 +50,16 @@ struct _MateColorButtonPrivate
 {
   GtkWidget *draw_area; /* Widget where we draw the color sample */
   GtkWidget *cs_dialog; /* Color selection dialog */
-
+  
   gchar *title;         /* Title for the color selection window */
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   GdkRGBA color;
 #else
   GdkColor color;
   guint16 alpha;
 #endif
-
+  
   guint use_alpha : 1;  /* Use alpha or not */
 };
 
@@ -269,13 +269,12 @@ mate_color_button_get_checkered (void)
 }
 
 /* Handle exposure events for the color picker's drawing area */
-#if GTK_CHECK_VERSION (3, 0, 0)
 static gboolean
+#if GTK_CHECK_VERSION (3, 0, 0)
 draw (GtkWidget      *widget, 
       cairo_t        *cr, 
       gpointer        data)
 #else
-static gint
 expose_event (GtkWidget      *widget, 
               GdkEventExpose *event, 
               gpointer        data)
@@ -283,12 +282,11 @@ expose_event (GtkWidget      *widget,
 {
   MateColorButton *color_button = MATE_COLOR_BUTTON (data);
   cairo_pattern_t *checkered;
+
 #if !GTK_CHECK_VERSION (3, 0, 0)
+  cairo_t *cr = gdk_cairo_create (event->window);
+
   GtkAllocation allocation;
-  cairo_t *cr;
-
-  cr = gdk_cairo_create (event->window);
-
   gtk_widget_get_allocation (widget, &allocation);
   gdk_cairo_rectangle (cr, &allocation);
   cairo_clip (cr);
@@ -441,7 +439,7 @@ set_color_icon (GdkDragContext *context,
            (color->blue & 0xff00);
 
   gdk_pixbuf_fill (pixbuf, pixel);
-
+  
   gtk_drag_set_icon_pixbuf (context, pixbuf, -2, -2);
   g_object_unref (pixbuf);
 #endif
@@ -453,7 +451,7 @@ mate_color_button_drag_begin (GtkWidget      *widget,
 			     gpointer        data)
 {
   MateColorButton *color_button = data;
-
+  
   set_color_icon (context, &color_button->priv->color);
 }
 
@@ -672,22 +670,22 @@ mate_color_button_clicked (GtkButton *button)
     {
       /* Create the dialog and connects its buttons */
       GtkWidget *parent;
-
+      
       parent = gtk_widget_get_toplevel (GTK_WIDGET (color_button));
-
+      
       color_button->priv->cs_dialog = mate_color_selection_dialog_new (color_button->priv->title);
-
+      
       color_dialog = MATE_COLOR_SELECTION_DIALOG (color_button->priv->cs_dialog);
 
       if (gtk_widget_is_toplevel (parent) && GTK_IS_WINDOW (parent))
         {
           if (GTK_WINDOW (parent) != gtk_window_get_transient_for (GTK_WINDOW (color_dialog)))
-	    gtk_window_set_transient_for (GTK_WINDOW (color_dialog), GTK_WINDOW (parent));
-
+ 	    gtk_window_set_transient_for (GTK_WINDOW (color_dialog), GTK_WINDOW (parent));
+	       
 	  gtk_window_set_modal (GTK_WINDOW (color_dialog),
 				gtk_window_get_modal (GTK_WINDOW (parent)));
 	}
-
+      
       g_signal_connect (color_dialog->ok_button, "clicked",
                         G_CALLBACK (dialog_ok_clicked), color_button);
       g_signal_connect (color_dialog->cancel_button, "clicked",
@@ -702,7 +700,7 @@ mate_color_button_clicked (GtkButton *button)
                                                color_button->priv->use_alpha);
 
   mate_color_selection_set_has_palette (MATE_COLOR_SELECTION (color_dialog->colorsel), TRUE);
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   mate_color_selection_set_previous_rgba (MATE_COLOR_SELECTION (color_dialog->colorsel),
 					  &color_button->priv->color);
@@ -774,7 +772,7 @@ mate_color_button_set_rgba (MateColorButton *color_button,
   color_button->priv->color.alpha = color->alpha;
 
   gtk_widget_queue_draw (color_button->priv->draw_area);
-
+  
   g_object_notify (G_OBJECT (color_button), "color");
 }
 #endif
@@ -819,7 +817,7 @@ mate_color_button_get_color (MateColorButton *color_button,
 			    GdkColor       *color)
 {
   g_return_if_fail (MATE_IS_COLOR_BUTTON (color_button));
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   color->red = color_button->priv->color.red * 0xffff;
   color->green = color_button->priv->color.green * 0xffff;
@@ -846,7 +844,7 @@ mate_color_button_get_rgba (MateColorButton *color_button,
 			                      GdkRGBA         *color)
 {
   g_return_if_fail (MATE_IS_COLOR_BUTTON (color_button));
-
+  
   color->red = color_button->priv->color.red;
   color->green = color_button->priv->color.green;
   color->blue = color_button->priv->color.blue;
@@ -868,7 +866,7 @@ guint16
 mate_color_button_get_alpha (MateColorButton *color_button)
 {
   g_return_val_if_fail (MATE_IS_COLOR_BUTTON (color_button), 0);
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   return color_button->priv->color.alpha * 0xffff;
 #else
