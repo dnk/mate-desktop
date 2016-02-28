@@ -277,11 +277,7 @@ static const guchar dropper_mask[] = {
   0x02, 0x00, 0x00, 0x00 };
 #endif
 
-#if GTK_CHECK_VERSION (3, 0, 0)
 G_DEFINE_TYPE (MateColorSelection, mate_color_selection, GTK_TYPE_BOX)
-#else
-G_DEFINE_TYPE (MateColorSelection, mate_color_selection, GTK_TYPE_VBOX)
-#endif
 
 static void
 mate_color_selection_class_init (MateColorSelectionClass *klass)
@@ -2501,7 +2497,7 @@ mate_color_selection_new (void)
   color[2] = 1.0;
   color[3] = 1.0;
   
-  colorsel = g_object_new (MATE_TYPE_COLOR_SELECTION, NULL);
+  colorsel = g_object_new (MATE_TYPE_COLOR_SELECTION, "orientation", GTK_ORIENTATION_VERTICAL, NULL);
   priv = colorsel->private_data;
   set_color_internal (colorsel, color);
   mate_color_selection_set_has_opacity_control (colorsel, TRUE);
