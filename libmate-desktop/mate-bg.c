@@ -101,9 +101,9 @@ struct _MateBG {
 	char		*filename;
 	MateBGPlacement	 placement;
 	MateBGColorType	 color_type;
-#if GTK_CHECK_VERSION(3, 0, 0)
-	GdkRGBA		 primary;
-	GdkRGBA		 secondary;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	GdkRGBA	 	 primary;
+	GdkRGBA	 	 secondary;
 #else
 	GdkColor	 primary;
 	GdkColor	 secondary;
@@ -156,12 +156,18 @@ static GdkPixbuf *pixbuf_scale_to_min  (GdkPixbuf  *src,
 					int         min_width,
 					int         min_height);
 #if !GTK_CHECK_VERSION(3, 0, 0)
+
 static void       pixbuf_draw_gradient (GdkPixbuf    *pixbuf,
 					gboolean      horizontal,
+#if GTK_CHECK_VERSION (3, 0, 0)
+					GdkRGBA     *c1,
+					GdkRGBA     *c2,
+#else
 					GdkColor     *c1,
 					GdkColor     *c2,
 					GdkRectangle *rect);
 #endif
+					GdkRectangle *rect);
 
 static void       pixbuf_tile          (GdkPixbuf  *src,
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -225,10 +231,10 @@ static FileSize   *find_best_size      (GSList                *sizes,
 					gint                   width,
 					gint                   height);
 
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION (3, 0, 0)
 static void
-color_from_string(const char *string,
-		  GdkRGBA    *colorp)
+color_from_string (const char *string,
+		   GdkRGBA   *colorp)
 {
 	/* If all else fails use black */
 	if (!gdk_rgba_parse (colorp, string)) {
@@ -387,8 +393,8 @@ mate_bg_load_from_gsettings (MateBG    *bg,
 	char    *tmp;
 	char    *filename;
 	MateBGColorType ctype;
-#if GTK_CHECK_VERSION(3, 0, 0)
-	GdkRGBA c1,c2;
+#if GTK_CHECK_VERSION (3, 0, 0)
+	GdkRGBA c1, c2;
 #else
 	GdkColor c1, c2;
 #endif
@@ -1416,7 +1422,7 @@ mate_bg_create_pixmap  (MateBG      *bg,
 
 	cr = cairo_create (surface);
 	if (!bg->filename && bg->color_type == MATE_BG_COLOR_SOLID) {
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION (3, 0, 0)
 		gdk_cairo_set_source_rgba (cr, &(bg->primary));
 #else
 		gdk_cairo_set_source_color (cr, &(bg->primary));
@@ -1453,7 +1459,7 @@ mate_bg_is_dark (MateBG *bg,
 		  int      width,
 		  int      height)
 {
-#if GTK_CHECK_VERSION(3, 0, 0)
+#if GTK_CHECK_VERSION (3, 0, 0)
 	GdkRGBA color;
 #else
 	GdkColor color;
