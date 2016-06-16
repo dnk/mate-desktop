@@ -462,11 +462,13 @@ mate_about_dialog_init (MateAboutDialog *about)
 {
   GtkDialog *dialog = GTK_DIALOG (about);
   MateAboutDialogPrivate *priv;
+  GdkDisplay *display;
   GtkWidget *vbox, *hbox, *button, *close_button, *image;
 
   _mate_desktop_init_i18n ();
 
   /* Data */
+  display = gtk_widget_get_display (GTK_WIDGET (about));
   priv = MATE_ABOUT_DIALOG_GET_PRIVATE (about);
   about->private_data = priv;
 
@@ -482,8 +484,8 @@ mate_about_dialog_init (MateAboutDialog *about)
   priv->documenters = NULL;
   priv->artists = NULL;
 
-  priv->hand_cursor = gdk_cursor_new (GDK_HAND2);
-  priv->regular_cursor = gdk_cursor_new (GDK_XTERM);
+  priv->hand_cursor = gdk_cursor_new_for_display (display, GDK_HAND2);
+  priv->regular_cursor = gdk_cursor_new_for_display (display, GDK_XTERM);
   priv->hovering_over_link = FALSE;
   priv->wrap_license = FALSE;
 
@@ -494,7 +496,9 @@ mate_about_dialog_init (MateAboutDialog *about)
 #endif
 
   /* Widgets */
+#if !GTK_CHECK_VERSION(3,0,0)
   gtk_widget_push_composite_child ();
+#endif
 
 #if GTK_CHECK_VERSION (3, 0, 0)
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 8);
@@ -589,7 +593,9 @@ mate_about_dialog_init (MateAboutDialog *about)
 
   gtk_window_set_resizable (GTK_WINDOW (about), FALSE);
 
+#if !GTK_CHECK_VERSION(3,0,0)
   gtk_widget_pop_composite_child ();
+#endif
 
   gtk_widget_grab_default (close_button);
   gtk_widget_grab_focus (close_button);
@@ -1910,12 +1916,17 @@ text_view_visibility_notify_event (GtkWidget          *text_view,
                                    GdkEventVisibility *event,
                                    MateAboutDialog     *about)
 {
+#if GTK_CHECK_VERSION (3, 0, 0)
+  GdkDeviceManager *device_manager;
+  GdkDevice *device;
+#endif
   gint wx, wy, bx, by;
 
 #if GTK_CHECK_VERSION (3, 0, 0)
-  GdkDeviceManager *device_manager = gdk_display_get_device_manager (gtk_widget_get_display(text_view));
-  GdkDevice *device = gdk_device_manager_get_client_pointer (device_manager);
-  gdk_device_get_position (device, NULL, &wx, &wy);
+  device_manager = gdk_display_get_device_manager (gtk_widget_get_display(text_view));
+  device = gdk_device_manager_get_client_pointer (device_manager);
+
+  gdk_window_get_device_position (gtk_widget_get_window (text_view), device, &wx, &wy, NULL);
 #else
   gdk_window_get_pointer (gtk_widget_get_window (text_view), &wx, &wy, NULL);
 #endif

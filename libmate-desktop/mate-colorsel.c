@@ -96,10 +96,10 @@ struct _ColorSelectionPrivate
   guint default_set : 1;
   guint default_alpha_set : 1;
   guint has_grab : 1;
-
+  
   gdouble color[COLORSEL_NUM_CHANNELS];
   gdouble old_color[COLORSEL_NUM_CHANNELS];
-
+  
   GtkWidget *triangle_colorsel;
   GtkWidget *hue_spinbutton;
   GtkWidget *sat_spinbutton;
@@ -112,10 +112,10 @@ struct _ColorSelectionPrivate
   GtkWidget *opacity_entry;
   GtkWidget *palette_frame;
   GtkWidget *hex_entry;
-
+  
   /* The Palette code */
   GtkWidget *custom_palette [GTK_CUSTOM_PALETTE_WIDTH][GTK_CUSTOM_PALETTE_HEIGHT];
-
+  
   /* The color_sample stuff */
   GtkWidget *sample_area;
   GtkWidget *old_sample;
@@ -363,23 +363,25 @@ mate_color_selection_init (MateColorSelection *colorsel)
   ColorSelectionPrivate *priv;
   AtkObject *atk_obj;
   GList *focus_chain = NULL;
-
+  
   _mate_desktop_init_i18n ();
 
+#if !GTK_CHECK_VERSION(3,0,0)
   gtk_widget_push_composite_child ();
+#endif
 
   priv = colorsel->private_data = G_TYPE_INSTANCE_GET_PRIVATE (colorsel, MATE_TYPE_COLOR_SELECTION, ColorSelectionPrivate);
   priv->changing = FALSE;
   priv->default_set = FALSE;
   priv->default_alpha_set = FALSE;
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   top_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 12);
 #else
   top_hbox = gtk_hbox_new (FALSE, 12);
 #endif
   gtk_box_pack_start (GTK_BOX (colorsel), top_hbox, FALSE, FALSE, 0);
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
 #else
@@ -393,21 +395,21 @@ mate_color_selection_init (MateColorSelection *colorsel)
   gtk_box_pack_start (GTK_BOX (vbox), priv->triangle_colorsel, FALSE, FALSE, 0);
   gtk_widget_set_tooltip_text (priv->triangle_colorsel,
                         _("Select the color you want from the outer ring. Select the darkness or lightness of that color using the inner triangle."));
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
 #else
   hbox = gtk_hbox_new (FALSE, 6);
 #endif
   gtk_box_pack_end (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
-
+  
   frame = gtk_frame_new (NULL);
   gtk_widget_set_size_request (frame, -1, 30);
   gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
   color_sample_new (colorsel);
   gtk_container_add (GTK_CONTAINER (frame), priv->sample_area);
   gtk_box_pack_start (GTK_BOX (hbox), frame, TRUE, TRUE, 0);
-
+  
   button = gtk_button_new ();
 
   gtk_widget_set_events (button, GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK);
@@ -421,7 +423,7 @@ mate_color_selection_init (MateColorSelection *colorsel)
 
   gtk_widget_set_tooltip_text (button,
                         _("Click the eyedropper, then click a color anywhere on your screen to select that color."));
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   top_right_vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
 #else
@@ -446,18 +448,18 @@ mate_color_selection_init (MateColorSelection *colorsel)
                          _("Amount of green light in the color."));
   make_label_spinbutton (colorsel, &priv->blue_spinbutton, _("_Blue:"), table, 6, 2, COLORSEL_BLUE,
                          _("Amount of blue light in the color."));
-  gtk_table_attach_defaults (GTK_TABLE (table), gtk_hseparator_new (), 0, 8, 3, 4); 
+  gtk_table_attach_defaults (GTK_TABLE (table), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, 8, 3, 4); 
 
-  priv->opacity_label = gtk_label_new_with_mnemonic (_("Op_acity:")); 
-  gtk_misc_set_alignment (GTK_MISC (priv->opacity_label), 0.0, 0.5); 
+  priv->opacity_label = gtk_label_new_with_mnemonic (_("Op_acity:"));
+#if GTK_CHECK_VERSION (3, 16, 0)
+  gtk_label_set_xalign (GTK_LABEL (priv->opacity_label), 0.0);
+#else
+  gtk_misc_set_alignment (GTK_MISC (priv->opacity_label), 0.0, 0.5);
+#endif
   gtk_table_attach_defaults (GTK_TABLE (table), priv->opacity_label, 0, 1, 4, 5); 
   adjust = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 255.0, 1.0, 1.0, 0.0)); 
-  g_object_set_data (G_OBJECT (adjust), "COLORSEL", colorsel);
-#if GTK_CHECK_VERSION (3, 0, 0)
-  priv->opacity_slider = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, adjust);
-#else
+  g_object_set_data (G_OBJECT (adjust), "COLORSEL", colorsel); 
   priv->opacity_slider = gtk_hscale_new (adjust);
-#endif
   gtk_widget_set_tooltip_text (priv->opacity_slider,
                         _("Transparency of the color."));
   gtk_label_set_mnemonic_widget (GTK_LABEL (priv->opacity_label),
@@ -478,7 +480,11 @@ mate_color_selection_init (MateColorSelection *colorsel)
   
   label = gtk_label_new_with_mnemonic (_("Color _name:"));
   gtk_table_attach_defaults (GTK_TABLE (table), label, 0, 1, 5, 6);
+#if GTK_CHECK_VERSION (3, 16, 0)
+  gtk_label_set_xalign (GTK_LABEL (label), 0.0);
+#else
   gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
+#endif
   priv->hex_entry = gtk_entry_new ();
 
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), priv->hex_entry);
@@ -525,7 +531,11 @@ mate_color_selection_init (MateColorSelection *colorsel)
   priv->palette_frame = gtk_vbox_new (FALSE, 6);
 #endif
   label = gtk_label_new_with_mnemonic (_("_Palette:"));
+#if GTK_CHECK_VERSION (3, 16, 0)
+  gtk_label_set_xalign (GTK_LABEL (label), 0.0);
+#else
   gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
+#endif
   gtk_box_pack_start (GTK_BOX (priv->palette_frame), label, FALSE, FALSE, 0);
 
   gtk_label_set_mnemonic_widget (GTK_LABEL (label),
@@ -558,7 +568,9 @@ mate_color_selection_init (MateColorSelection *colorsel)
       make_all_relations (atk_obj, priv);
     } 
 
+#if !GTK_CHECK_VERSION(3,0,0)
   gtk_widget_pop_composite_child ();
+#endif
 }
 
 /* GObject methods */
@@ -1071,7 +1083,7 @@ static void
 color_sample_new (MateColorSelection *colorsel)
 {
   ColorSelectionPrivate *priv;
-
+  
   priv = colorsel->private_data;
 
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -1378,13 +1390,13 @@ palette_set_color (GtkWidget         *drawing_area,
 {
   gdouble *new_color = g_new (double, 4);
   GdkColor gdk_color;
-
+  
   gdk_color.red = UNSCALE (color[0]);
   gdk_color.green = UNSCALE (color[1]);
   gdk_color.blue = UNSCALE (color[2]);
 
   gtk_widget_modify_bg (drawing_area, GTK_STATE_NORMAL, &gdk_color);
-
+  
   if (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (drawing_area), "color_set")) == 0)
     {
       static const GtkTargetEntry targets[] = {
@@ -1394,14 +1406,14 @@ palette_set_color (GtkWidget         *drawing_area,
 			   GDK_BUTTON1_MASK | GDK_BUTTON3_MASK,
 			   targets, 1,
 			   GDK_ACTION_COPY | GDK_ACTION_MOVE);
-
+      
       g_signal_connect (drawing_area, "drag-begin",
 			G_CALLBACK (palette_drag_begin),
 			colorsel);
       g_signal_connect (drawing_area, "drag-data-get",
 			G_CALLBACK (palette_drag_handle),
 			colorsel);
-
+      
       g_object_set_data (G_OBJECT (drawing_area), "color_set",
 			 GINT_TO_POINTER (1));
     }
@@ -1410,7 +1422,7 @@ palette_set_color (GtkWidget         *drawing_area,
   new_color[1] = color[1];
   new_color[2] = color[2];
   new_color[3] = 1.0;
-
+  
   g_object_set_data_full (G_OBJECT (drawing_area), "color_val", new_color, (GDestroyNotify)g_free);
 }
 
@@ -1449,13 +1461,13 @@ popup_position_func (GtkMenu   *menu,
   gint root_x, root_y;
   GdkScreen *screen;
   GtkAllocation allocation;
-
+  
   widget = GTK_WIDGET (user_data);
-
+  
   g_return_if_fail (gtk_widget_get_realized (widget));
 
   gdk_window_get_origin (gtk_widget_get_window (widget), &root_x, &root_y);
-
+  
 #if GTK_CHECK_VERSION (3, 0, 0)
   gtk_widget_get_preferred_size (GTK_WIDGET (menu), &req, NULL);
 #else
@@ -2018,7 +2030,7 @@ key_press (GtkWidget   *invisible,
 #else
   gdk_display_warp_pointer (display, screen, x + dx, y + dy);
 #endif
-
+  
   return TRUE;
 
 }
@@ -2132,13 +2144,13 @@ hex_changed (GtkWidget *hex_entry,
   GdkColor color;
 #endif
   gchar *text;
-
+  
   colorsel = MATE_COLOR_SELECTION (data);
   priv = colorsel->private_data;
-
+  
   if (priv->changing)
     return;
-
+  
   text = gtk_editable_get_chars (GTK_EDITABLE (priv->hex_entry), 0, -1);
 #if GTK_CHECK_VERSION (3, 0, 0)
   if (gdk_rgba_parse (&color, text))
@@ -2318,7 +2330,11 @@ make_label_spinbutton (MateColorSelection *colorsel,
   label = gtk_label_new_with_mnemonic (text);
   gtk_label_set_mnemonic_widget (GTK_LABEL (label), *spinbutton);
 
+#if GTK_CHECK_VERSION (3, 16, 0)
+  gtk_label_set_xalign (GTK_LABEL (label), 0.0);
+#else
   gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
+#endif
   gtk_table_attach_defaults (GTK_TABLE (table), label, i, i+1, j, j+1);
   gtk_table_attach_defaults (GTK_TABLE (table), *spinbutton, i+1, i+2, j, j+1);
 }
@@ -2677,7 +2693,7 @@ mate_color_selection_set_current_color (MateColorSelection *colorsel,
 {
   ColorSelectionPrivate *priv;
   gint i;
-
+  
   g_return_if_fail (MATE_IS_COLOR_SELECTION (colorsel));
   g_return_if_fail (color != NULL);
 
@@ -2787,10 +2803,10 @@ mate_color_selection_get_current_color (MateColorSelection *colorsel,
 				       GdkColor          *color)
 {
   ColorSelectionPrivate *priv;
-
+  
   g_return_if_fail (MATE_IS_COLOR_SELECTION (colorsel));
   g_return_if_fail (color != NULL);
-
+  
   priv = colorsel->private_data;
   color->red = UNSCALE (priv->color[COLORSEL_RED]);
   color->green = UNSCALE (priv->color[COLORSEL_GREEN]);
@@ -2894,10 +2910,10 @@ mate_color_selection_set_previous_color (MateColorSelection *colorsel,
 					const GdkColor    *color)
 {
   ColorSelectionPrivate *priv;
-
+  
   g_return_if_fail (MATE_IS_COLOR_SELECTION (colorsel));
   g_return_if_fail (color != NULL);
-
+  
   priv = colorsel->private_data;
   priv->changing = TRUE;
   priv->old_color[COLORSEL_RED] = SCALE (color->red);
@@ -2975,10 +2991,10 @@ mate_color_selection_get_previous_color (MateColorSelection *colorsel,
 					GdkColor           *color)
 {
   ColorSelectionPrivate *priv;
-
+  
   g_return_if_fail (MATE_IS_COLOR_SELECTION (colorsel));
   g_return_if_fail (color != NULL);
-
+  
   priv = colorsel->private_data;
   color->red = UNSCALE (priv->old_color[COLORSEL_RED]);
   color->green = UNSCALE (priv->old_color[COLORSEL_GREEN]);
@@ -3080,7 +3096,7 @@ mate_color_selection_palette_from_string (const gchar *str,
   gchar *p;
   gchar *start;
   gchar *copy;
-
+  
   count = 0;
   retval = NULL;
   copy = g_strdup (str);
@@ -3097,7 +3113,7 @@ mate_color_selection_palette_from_string (const gchar *str,
             {
               goto failed; /* empty entry */
             }
-
+              
           if (*p)
             {
               *p = '\0';
@@ -3122,7 +3138,7 @@ mate_color_selection_palette_from_string (const gchar *str,
     }
 
   g_free (copy);
-
+  
   if (colors)
     *colors = retval;
   else
@@ -3132,7 +3148,7 @@ mate_color_selection_palette_from_string (const gchar *str,
     *n_colors = count;
 
   return TRUE;
-
+  
  failed:
   g_free (copy);
   g_free (retval);

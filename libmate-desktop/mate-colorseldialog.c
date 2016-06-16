@@ -181,7 +181,7 @@ mate_color_selection_dialog_init (MateColorSelectionDialog *colorseldiag)
 
   gtk_widget_hide (colorseldiag->help_button);
 
-#if !GTK_CHECK_VERSION (3, 10, 0)
+#if !GTK_CHECK_VERSION(3,0,0)
   gtk_dialog_set_alternative_button_order (GTK_DIALOG (colorseldiag),
 					   GTK_RESPONSE_OK,
 					   GTK_RESPONSE_CANCEL,
