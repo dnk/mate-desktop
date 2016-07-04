@@ -138,18 +138,10 @@ void		 mate_bg_get_color             (MateBG               *bg,
 const gchar *    mate_bg_get_filename          (MateBG               *bg);
 
 /* Drawing and thumbnailing */
-#if GTK_CHECK_VERSION (3, 0, 0)
-void             mate_bg_draw                  (MateBG               *bg,
-						cairo_t  *cr,
-						gint     width,
-						gint     height,
-                                                gboolean               is_root);
-#else
 void             mate_bg_draw                  (MateBG               *bg,
 						 GdkPixbuf             *dest,
 						 GdkScreen	       *screen,
                                                  gboolean               is_root);
-#endif
 
 #if GTK_CHECK_VERSION(3, 0, 0)
 cairo_surface_t *mate_bg_create_surface        (MateBG               *bg,
